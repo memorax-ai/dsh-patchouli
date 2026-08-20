@@ -5,11 +5,17 @@ import { Context, type Fiber } from '@deepseek-ai/cordis'
 import AgentRegistry, { agentEvents, type Agent } from '@deepseek-ai/dsh-agent'
 import { AttachmentId } from '@deepseek-ai/dsh-attachment'
 import {
+  default as LlmRuntime,
   CallId,
+  LlmAdapter,
   createAssistantMessage,
   createToolResultMessage,
   createUserMessage,
   type ContentBlock,
+  type FinishReason,
+  type GenerateOptions,
+  type LlmProviderInfo,
+  type StreamChunk,
   type UserMessage,
 } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type Session } from '@deepseek-ai/dsh-session'
@@ -46,6 +52,33 @@ function attributesOf(request: MemoryUpdateRequest | MemoryRetrieveRequest): Jso
   return request.meta.attributes
 }
 
+class AggregationAdapter extends LlmAdapter {
+  readonly calls: GenerateOptions[] = []
+  readonly output: string
+  readonly finish: FinishReason
+
+  constructor(output: string, finish: FinishReason = { kind: 'stop' }) {
+    super()
+    this.output = output
+    this.finish = finish
+  }
+
+  providerInfo(provider: string): LlmProviderInfo {
+    return { id: provider, name: 'Aggregation fixture' }
+  }
+
+  async *stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+    this.calls.push(options)
+    yield { type: 'block-start', index: 0, blockType: 'text' }
+    yield {
+      type: 'text-delta',
+      index: 0,
+      text: this.output,
+    }
+    yield { type: 'finish', reason: this.finish }
+  }
+}
+
 async function mountConsumer(t: TestContext, config: agentLoop.Config = {}) {
   const ctx = new Context()
   const fibers: Fiber[] = []
@@ -70,6 +103,7 @@ async function mountConsumer(t: TestContext, config: agentLoop.Config = {}) {
   fibers.push(await ctx.plugin(AgentRegistry))
   fibers.push(await ctx.plugin(SystemPrompt))
   fibers.push(await ctx.plugin(ToolRuntime))
+  fibers.push(await ctx.plugin(LlmRuntime))
   fibers.push(await ctx.plugin(patchouli))
   const consumer = await ctx.plugin(agentLoop, config)
   fibers.push(consumer)
@@ -372,6 +406,147 @@ test('aggregates successful providers into one recall message', async (t) => {
       { pluginId: 'second', data: { items: [{ content: 'second result' }] } },
     ],
   })
+})
+
+test('uses a dedicated model call to aggregate raw provider results', async (t) => {
+  const { ctx } = await mountConsumer(t, {
+    aggregation: {
+      enabled: true,
+      provider: 'aggregation-fixture',
+      model: 'fixture-model',
+      maxTokens: 256,
+    },
+  })
+  const adapter = new AggregationAdapter(JSON.stringify([
+    { sourceIds: ['first', 'second'], excerpt: 'Use SQLite locally.' },
+    { sourceIds: ['second'], excerpt: 'Enable WAL.' },
+  ]))
+  const unregister = ctx.llm.registerAdapter(['aggregation-fixture'], adapter)
+  t.after(unregister)
+  for (const [id, value] of [
+    ['first', { facts: ['Use SQLite locally.'] }],
+    ['second', { facts: ['Use SQLite locally.', 'Enable WAL.'] }],
+  ] as const) {
+    const dispose = ctx.patchouli.register({
+      id,
+      async update() { return null },
+      async retrieve() { return value },
+    })
+    t.after(dispose)
+  }
+  const agent = fakeAgent()
+  const user = createUserMessage({
+    content: [{ type: 'text', text: 'Which database settings did we choose?' }],
+    source: { kind: 'user' },
+  })
+  const decision = await agentEvents(ctx, agent).waterfall(
+    'agent/pre-step',
+    { messages: [user], turn: 1, step: 1, signal: SIGNAL },
+    () => Promise.resolve({ kind: 'enter', messages: [user] }),
+  )
+
+  if (decision.kind !== 'enter') assert.fail('pre-step decision did not enter')
+  assert.equal(adapter.calls.length, 1)
+  const call = adapter.calls[0]!
+  assert.equal(call.provider, 'aggregation-fixture')
+  assert.equal(call.model, 'fixture-model')
+  assert.equal(call.maxTokens, 256)
+  assert.equal(call.system, agentLoop.MEMORY_AGGREGATION_SYSTEM_PROMPT)
+  assert.equal(call.messages.length, 1)
+  const input = JSON.parse(textAt(call.messages[0]!.content))
+  assert.equal(input.kind, 'patchouli-memory-aggregation-input')
+  assert.deepEqual(input.queryContext.messages, [user])
+  assert.deepEqual(input.results, [
+    { pluginId: 'first', data: { facts: ['Use SQLite locally.'] } },
+    { pluginId: 'second', data: { facts: ['Use SQLite locally.', 'Enable WAL.'] } },
+  ])
+  assert.equal(decision.messages.length, 2)
+  assert.deepEqual(JSON.parse(textAt(decision.messages[1]!.content)), {
+    kind: 'patchouli-memory-aggregate',
+    point: 'agent/pre-step',
+    results: [
+      { sourceIds: ['first', 'second'], excerpt: 'Use SQLite locally.' },
+      { sourceIds: ['second'], excerpt: 'Enable WAL.' },
+    ],
+  })
+})
+
+test('falls back to raw results when model aggregation is not valid verbatim evidence', async (t) => {
+  const { ctx } = await mountConsumer(t, {
+    aggregation: {
+      enabled: true,
+      provider: 'aggregation-fixture',
+      model: 'fixture-model',
+    },
+  })
+  const adapter = new AggregationAdapter(JSON.stringify([
+    { sourceIds: ['first', 'second'], excerpt: 'Enable WAL.' },
+  ]))
+  const unregister = ctx.llm.registerAdapter(['aggregation-fixture'], adapter)
+  t.after(unregister)
+  for (const [id, value] of [
+    ['first', { facts: ['Use SQLite locally.'] }],
+    ['second', { facts: ['Enable WAL.'] }],
+  ] as const) {
+    const dispose = ctx.patchouli.register({
+      id,
+      async update() { return null },
+      async retrieve() { return value },
+    })
+    t.after(dispose)
+  }
+  const agent = fakeAgent()
+  const user = createUserMessage({
+    content: [{ type: 'text', text: 'Which database settings did we choose?' }],
+    source: { kind: 'user' },
+  })
+  const decision = await agentEvents(ctx, agent).waterfall(
+    'agent/pre-step',
+    { messages: [user], turn: 1, step: 1, signal: SIGNAL },
+    () => Promise.resolve({ kind: 'enter', messages: [user] }),
+  )
+
+  if (decision.kind !== 'enter') assert.fail('pre-step decision did not enter')
+  assert.deepEqual(JSON.parse(textAt(decision.messages[1]!.content)), {
+    kind: 'patchouli-memory-results',
+    point: 'agent/pre-step',
+    results: [
+      { pluginId: 'first', data: { facts: ['Use SQLite locally.'] } },
+      { pluginId: 'second', data: { facts: ['Enable WAL.'] } },
+    ],
+  })
+})
+
+test('falls back to raw results when model aggregation is truncated', async (t) => {
+  const { ctx } = await mountConsumer(t, {
+    aggregation: {
+      enabled: true,
+      provider: 'aggregation-fixture',
+      model: 'fixture-model',
+    },
+  })
+  const adapter = new AggregationAdapter('[', { kind: 'max-tokens' })
+  const unregister = ctx.llm.registerAdapter(['aggregation-fixture'], adapter)
+  t.after(unregister)
+  const dispose = ctx.patchouli.register({
+    id: 'first',
+    async update() { return null },
+    async retrieve() { return { facts: ['Use SQLite locally.'] } },
+  })
+  t.after(dispose)
+  const agent = fakeAgent()
+  const user = createUserMessage({
+    content: [{ type: 'text', text: 'Which database did we choose?' }],
+    source: { kind: 'user' },
+  })
+  const decision = await agentEvents(ctx, agent).waterfall(
+    'agent/pre-step',
+    { messages: [user], turn: 1, step: 1, signal: SIGNAL },
+    () => Promise.resolve({ kind: 'enter', messages: [user] }),
+  )
+
+  if (decision.kind !== 'enter') assert.fail('pre-step decision did not enter')
+  assert.equal(JSON.parse(textAt(decision.messages[1]!.content)).kind, 'patchouli-memory-results')
 })
 
 test('encodes adversarial provider text unambiguously and omits empty recalls', async (t) => {

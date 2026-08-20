@@ -80,3 +80,40 @@ a per-plugin policy on `dsh-patchouli`. Provider filters and user policy are
 combined with AND semantics. User policies can constrain operations, source
 types and IDs, scopes, and exact metadata attributes; an unconfigured plugin
 receives every call allowed by its provider-owned semantic boundary.
+
+## Verification and recall demo
+
+The adapter tests verify request mapping, routing points, result shapes, and
+exact Harmony seams. They do not prove that every third-party database already
+contains searchable data. A real retrieval also depends on the native plugin
+being configured and having stored or indexed something relevant.
+
+Automatic turn capture can populate OpenViking, Hindsight, MemOS, Mneme,
+Memory Gate, and Lingshu. Mnemon, Graph Memory, and Engramory need their native
+or explicit update paths before automatic recall has data. Memory Evolve keeps
+writes behind its own approval-aware tool. A single explicit record is enough
+for some plugins; summarizers and threshold-based extractors may need several
+turns before they emit a memory.
+
+Run the deterministic multi-source demo with:
+
+```bash
+pnpm demo:recall
+```
+
+It downloads the programming-focused LoCoMo `conv-47` sample, feeds 80 turn
+records through Patchouli Core and the real Mneme, Memory Gate, and Lingshu
+GOOJFC adapters, then triggers the real Agent Loop `agent/pre-step` recall. No
+other memory plugin is registered. DeepSeek V4 Flash first produces a dedicated
+aggregated memory, then answers the same multi-part question four times in
+isolation: once from each native recall and once from the aggregated memory.
+The JSON record and two-column browser report are written to
+`artifacts/demo/multi-source-recall.json` and
+`artifacts/demo/multi-source-recall.html`.
+
+The demo uses in-memory implementations of the three plugins' public native
+interfaces so their results are repeatable without third-party database
+credentials. The full comparison command requires a configured DeepSeek
+provider. It verifies the Patchouli routing and Agent Loop aggregation path;
+testing a third-party package's own database, model calls, or cloud service
+still requires installing and configuring that package.

@@ -48,6 +48,7 @@
     "typecheck": "tsc -p packages/protocol/tsconfig.json && tsc -p tsconfig.json && tsc -p tsconfig.tooling.json && pnpm --filter dsh-patchouli-agent-loop typecheck && pnpm --filter dsh-patchouli-artifact-ingestor typecheck && pnpm --filter dsh-patchouli-crud-test-plugin typecheck && pnpm --filter dsh-patchouli-session-indexer typecheck && pnpm --filter dsh-patchouli-workspace-indexer typecheck",
     "test": "pnpm run build && node --test 'test/*.test.ts' 'packages/protocol/test/*.test.ts'",
     "test:e2e": "pnpm run build && cargo build --locked -p patchouli-server --bin patchouli-db && node --test integration/crud-plugin.ts",
+    "demo:recall": "pnpm run build && node scripts/demo-multi-source-recall.ts --benchmark --deepseek-v4-flash",
     "check": "pnpm run typecheck && pnpm run test",
     "prepare": "pnpm run build"
   },
@@ -102,7 +103,7 @@
     "@deepseek-ai/dsh-storage-domain": "0.1.0-rc.6",
     "@deepseek-ai/dsh-system-prompt": "0.1.0-rc.6",
     "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.2.0",
     "typescript": "^6.0.3"
   },
   "keywords": [

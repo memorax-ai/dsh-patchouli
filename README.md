@@ -30,7 +30,7 @@ remains harness-neutral.
 ## Features
 
 - Common Memory Service with provider filters, user routing policies, and provenance.
-- Consumer-side aggregation that keeps native plugin results intact.
+- Optional dedicated-model aggregation that keeps native plugin results intact.
 - Agent Loop connector with configurable hooks and model tools.
 - Pluggable local or remote memory and knowledge implementations.
 - Managed image and workspace-file ingestion as typed Artifacts.
