@@ -70,7 +70,7 @@ dsh plugin --profile web add dsh-patchouli
 dsh --profile web --dump-config
 ```
 
-插件依赖独立的 `dsh-patchouli-db` npm 包。首次使用时，它会从同版本的 GitHub
+插件依赖独立的 `patchouli-db` npm 包。首次使用时，它会从同版本的 GitHub
 Release 下载并校验当前平台的守护进程二进制，同时初始化默认的本地数据库目录。
 随附的 DSH Profile 默认启用存储客户端，它会连接本地守护进程，并在需要时自动启动。
 最后一个命令应列出 `patchouli`、`patchouli-storage` 及各连接器插件。

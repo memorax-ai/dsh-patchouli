@@ -172,7 +172,7 @@ jobs:
       - name: Pack protocol and plugins
         run: |
           pnpm --filter dsh-patchouli-protocol pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
-          pnpm --filter dsh-patchouli-db pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter patchouli-db pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-agent-loop pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-artifact-ingestor pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-session-indexer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
@@ -222,7 +222,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           packages=(
             dsh-patchouli-protocol
-            dsh-patchouli-db
+            patchouli-db
             dsh-patchouli-agent-loop
             dsh-patchouli-artifact-ingestor
             dsh-patchouli-session-indexer

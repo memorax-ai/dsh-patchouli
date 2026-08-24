@@ -46,7 +46,7 @@ export function patchouliDbAsset(
   }
   const asset = assets[key]
   if (!asset) {
-    throw new Error(`dsh-patchouli-db does not support ${platform}/${arch}`)
+    throw new Error(`patchouli-db does not support ${platform}/${arch}`)
   }
   return asset
 }

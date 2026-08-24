@@ -42,7 +42,7 @@ import {
   type UnsubscribeChangesResult,
   type UpdateEntityParams,
 } from 'dsh-patchouli-protocol'
-import { resolvePatchouliDb } from 'dsh-patchouli-db'
+import { resolvePatchouliDb } from 'patchouli-db'
 
 import type { Config } from './storage.js'
 

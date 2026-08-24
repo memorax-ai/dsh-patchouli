@@ -1,5 +1,5 @@
 {
-  "name": "dsh-patchouli-db",
+  "name": "patchouli-db",
   "version": "0.1.4",
   "description": "Platform-aware Patchouli database daemon installer and launcher",
   "type": "module",

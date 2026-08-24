@@ -20,9 +20,6 @@ importers:
       dsh-patchouli-artifact-ingestor:
         specifier: workspace:*
         version: link:packages/artifact-ingestor
-      dsh-patchouli-db:
-        specifier: workspace:*
-        version: link:packages/db
       dsh-patchouli-protocol:
         specifier: workspace:*
         version: link:packages/protocol
@@ -32,6 +29,9 @@ importers:
       dsh-patchouli-workspace-indexer:
         specifier: workspace:*
         version: link:packages/workspace-indexer
+      patchouli-db:
+        specifier: workspace:*
+        version: link:packages/db
       zod:
         specifier: ^4.4.3
         version: 4.4.3

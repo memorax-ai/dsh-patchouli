@@ -72,7 +72,7 @@ dsh plugin --profile web add dsh-patchouli
 dsh --profile web --dump-config
 ```
 
-The plugin includes `dsh-patchouli-db` as a dependency. On first use it downloads
+The plugin includes `patchouli-db` as a dependency. On first use it downloads
 the matching, checksum-verified daemon binary from the same-version GitHub
 release and initializes the default local database home. The bundled DSH profile
 enables its storage client by default; it connects to the local daemon and starts
