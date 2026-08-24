@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Native knowledge context for DeepSeek Harness",
   "homepage": "https://github.com/memorax-ai/dsh-patchouli#readme",
   "bugs": {
@@ -44,9 +44,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p packages/protocol/tsconfig.json && tsc -p tsconfig.json && pnpm --filter dsh-patchouli-agent-loop build && pnpm --filter dsh-patchouli-artifact-ingestor build && pnpm --filter dsh-patchouli-crud-test-plugin build && pnpm --filter dsh-patchouli-session-indexer build && pnpm --filter dsh-patchouli-workspace-indexer build",
-    "typecheck": "tsc -p packages/protocol/tsconfig.json && tsc -p tsconfig.json && tsc -p tsconfig.tooling.json && pnpm --filter dsh-patchouli-agent-loop typecheck && pnpm --filter dsh-patchouli-artifact-ingestor typecheck && pnpm --filter dsh-patchouli-crud-test-plugin typecheck && pnpm --filter dsh-patchouli-session-indexer typecheck && pnpm --filter dsh-patchouli-workspace-indexer typecheck",
-    "test": "pnpm run build && node --test 'test/*.test.ts' 'packages/protocol/test/*.test.ts'",
+    "build": "tsc -p packages/protocol/tsconfig.json && pnpm --filter dsh-patchouli-db build && tsc -p tsconfig.json && pnpm --filter dsh-patchouli-agent-loop build && pnpm --filter dsh-patchouli-artifact-ingestor build && pnpm --filter dsh-patchouli-crud-test-plugin build && pnpm --filter dsh-patchouli-session-indexer build && pnpm --filter dsh-patchouli-workspace-indexer build",
+    "typecheck": "tsc -p packages/protocol/tsconfig.json && pnpm --filter dsh-patchouli-db typecheck && tsc -p tsconfig.json && tsc -p tsconfig.tooling.json && pnpm --filter dsh-patchouli-agent-loop typecheck && pnpm --filter dsh-patchouli-artifact-ingestor typecheck && pnpm --filter dsh-patchouli-crud-test-plugin typecheck && pnpm --filter dsh-patchouli-session-indexer typecheck && pnpm --filter dsh-patchouli-workspace-indexer typecheck",
+    "test": "pnpm run build && node --test 'test/*.test.ts' 'packages/protocol/test/*.test.ts' 'packages/db/test/*.test.ts'",
     "test:e2e": "pnpm run build && cargo build --locked -p patchouli-server --bin patchouli-db && node --test integration/crud-plugin.ts",
     "check": "pnpm run typecheck && pnpm run test",
     "prepare": "pnpm run build"
@@ -85,6 +85,7 @@
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",
+    "dsh-patchouli-db": "workspace:*",
     "dsh-patchouli-agent-loop": "workspace:*",
     "dsh-patchouli-artifact-ingestor": "workspace:*",
     "dsh-patchouli-session-indexer": "workspace:*",

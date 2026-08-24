@@ -22,6 +22,7 @@ if (process.env.GITHUB_REF_NAME !== expected) {
 const manifests = [
   'package.json',
   'packages/protocol/package.json',
+  'packages/db/package.json',
   'packages/agent-loop/package.json',
   'packages/artifact-ingestor/package.json',
   'packages/session-indexer/package.json',

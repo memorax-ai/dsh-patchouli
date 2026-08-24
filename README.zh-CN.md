@@ -63,16 +63,16 @@ DeepSeek Harness 是目前首个受支持的集成，数据库后端本身不依
 ## 安装与使用
 
 需要 Node.js `^22.19.0 || >=24`、pnpm 11，以及兼容 `0.1.0-rc.6` 的
-DeepSeek Harness。请先安装数据库守护进程：
+DeepSeek Harness：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/memorax-ai/dsh-patchouli/main/scripts/install.sh | sh
 dsh plugin --profile web add dsh-patchouli
 dsh --profile web --dump-config
 ```
 
-安装脚本会从最新 GitHub Release 下载经过校验的守护进程二进制。随附的 DSH
-Profile 默认启用存储客户端，它会连接本地守护进程，并在需要时自动启动。
+插件依赖独立的 `dsh-patchouli-db` npm 包。首次使用时，它会从同版本的 GitHub
+Release 下载并校验当前平台的守护进程二进制，同时初始化默认的本地数据库目录。
+随附的 DSH Profile 默认启用存储客户端，它会连接本地守护进程，并在需要时自动启动。
 最后一个命令应列出 `patchouli`、`patchouli-storage` 及各连接器插件。
 Patchouli 需要至少注册一个兼容的记忆或知识插件，才能实际处理路由后的
 `update`、`retrieve` 和 `subscribe` 调用。

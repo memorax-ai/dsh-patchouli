@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process'
 import { Buffer } from 'node:buffer'
 import { randomUUID } from 'node:crypto'
+import { access } from 'node:fs/promises'
 import { createConnection, type Socket } from 'node:net'
+import { dirname, join, normalize } from 'node:path'
 
 import { Service, type Context } from '@deepseek-ai/cordis'
 import {
@@ -40,6 +42,7 @@ import {
   type UnsubscribeChangesResult,
   type UpdateEntityParams,
 } from 'dsh-patchouli-protocol'
+import { resolvePatchouliDb } from 'dsh-patchouli-db'
 
 import type { Config } from './storage.js'
 
@@ -125,8 +128,16 @@ export class PatchouliStorageService extends Service {
       await this.connect()
     } catch (error) {
       if (!this.config.autoStart || !isUnavailable(error)) throw error
+      const command = this.config.command === 'patchouli-db'
+        ? await resolvePatchouliDb()
+        : this.config.command
+      await initializeDefaultHome(
+        command,
+        this.config.providerConfigPath,
+        this.config.backendConfigPath,
+      )
       await startDaemon(
-        this.config.command,
+        command,
         this.config.endpoint,
         this.config.providerConfigPath,
         this.config.backendConfigPath,
@@ -427,7 +438,7 @@ export class PatchouliStorageService extends Service {
       this.handshake = await this.call<HandshakeResult>(methods.handshake, {
         client: {
           name: 'dsh-patchouli',
-          version: '0.1.3',
+          version: '0.1.4',
           instance_id: randomUUID(),
         },
         protocol_versions: [protocolVersion],
@@ -594,6 +605,51 @@ async function startDaemon(
     child.once('error', reject)
   })
   child.unref()
+}
+
+async function initializeDefaultHome(
+  command: string,
+  providerConfigPath: string,
+  backendConfigPath: string,
+): Promise<void> {
+  const root = dirname(backendConfigPath)
+  if (normalize(backendConfigPath) !== normalize(join(root, 'config.json'))
+    || normalize(providerConfigPath) !== normalize(join(root, 'providers.json'))) {
+    return
+  }
+  if (await pathExists(backendConfigPath) && await pathExists(providerConfigPath)) return
+
+  const child = spawn(command, ['init', '--root', root], {
+    stdio: ['ignore', 'ignore', 'pipe'],
+  })
+  let stderr = ''
+  child.stderr?.setEncoding('utf8')
+  child.stderr?.on('data', chunk => {
+    if (stderr.length < 8_192) stderr += String(chunk)
+  })
+  await new Promise<void>((resolve, reject) => {
+    child.once('error', reject)
+    child.once('close', code => {
+      if (code === 0) resolve()
+      else reject(new Error(
+        `Patchouli daemon initialization failed with exit code ${code}${
+          stderr.trim() ? `: ${stderr.trim()}` : ''
+        }`,
+      ))
+    })
+  })
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && String(error.code) === 'ENOENT') {
+      return false
+    }
+    throw error
+  }
 }
 
 function isUnavailable(error: unknown): boolean {

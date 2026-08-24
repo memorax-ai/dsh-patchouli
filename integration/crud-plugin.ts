@@ -98,6 +98,38 @@ async function waitForDaemon(child: DaemonProcess, endpoint: string): Promise<vo
   })
 }
 
+test('storage auto-start initializes a missing default database home', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'patchouli-auto-start-'))
+  const endpoint = process.platform === 'win32'
+    ? String.raw`\\.\pipe\patchouli-auto-${process.pid}-${randomUUID()}`
+    : join(root, 'run', 'patchouli.sock')
+  const ctx = new Context()
+
+  t.after(async () => {
+    try {
+      await run(binary, ['stop', '--endpoint', endpoint])
+    } catch {
+      // The daemon may already have stopped after a failed assertion.
+    }
+    await ctx.fiber.dispose()
+    await rm(root, { recursive: true, force: true })
+  })
+
+  await ctx.plugin(storage, {
+    endpoint,
+    command: binary,
+    providerConfigPath: join(root, 'providers.json'),
+    backendConfigPath: join(root, 'config.json'),
+    artifactRootPath: join(root, 'data', 'artifacts'),
+    autoStart: true,
+    startupTimeoutMs: 10_000,
+  })
+
+  assert.equal(ctx.patchouliStorage.server?.server.version, '0.1.4')
+  await assert.doesNotReject(() => readFile(join(root, 'config.json'), 'utf8'))
+  await assert.doesNotReject(() => readFile(join(root, 'providers.json'), 'utf8'))
+})
+
 test('third-party plugin passes CRUD through the core service to SQLite', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'patchouli-crud-plugin-'))
   const endpoint = process.platform === 'win32'
