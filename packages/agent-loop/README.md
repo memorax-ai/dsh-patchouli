@@ -52,6 +52,9 @@ include the Session header but omit `session.events` unless a hook explicitly
 supplies a bounded event slice. The connector requires the official
 `sessionPersistence` service for this boundary.
 
+The `memory_retrieve` Tool accepts an optional open JSON `metadata` object and
+forwards it unchanged as `data.metadata` for plugin-defined filtering.
+
 The `memory_update` Tool accepts optional `messages` and `resources`; at least
 one must be present. A resource is a JSON request for a workspace file, not its
 bytes:

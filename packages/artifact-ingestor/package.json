@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-artifact-ingestor",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "DSH attachment and workspace-file ingestion for Patchouli",
   "type": "module",
   "main": "./lib/index.js",
@@ -26,7 +26,7 @@
     "@deepseek-ai/cordis": "^4.0.1",
     "@deepseek-ai/dsh-attachment": ">=0.1.0-rc.5 <0.2.0",
     "@deepseek-ai/dsh-fs": ">=0.1.0-rc.5 <0.2.0",
-    "dsh-patchouli": "0.1.2"
+    "dsh-patchouli": "0.1.3"
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",

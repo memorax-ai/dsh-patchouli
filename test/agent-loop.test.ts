@@ -133,7 +133,15 @@ test('registers update/retrieve tools and derives their scope from the agent', a
   const retrieve = await ctx.tools.execute({
     callId: CallId('retrieve-1'),
     name: 'memory_retrieve',
-    arguments: { query: ' prior work ', limit: 3 },
+    arguments: {
+      query: ' prior work ',
+      limit: 3,
+      metadata: {
+        project: 'patchouli',
+        labels: ['agent-loop', 'memory'],
+        filters: { archived: false },
+      },
+    },
     agent,
     signal: SIGNAL,
   })
@@ -185,7 +193,15 @@ test('registers update/retrieve tools and derives their scope from the agent', a
         workspaceRoot: '/workspace/patchouli',
       },
     },
-      data: { query: 'prior work', limit: 3 },
+      data: {
+        query: 'prior work',
+        limit: 3,
+        metadata: {
+          project: 'patchouli',
+          labels: ['agent-loop', 'memory'],
+          filters: { archived: false },
+        },
+      },
     }, SIGNAL],
     ['update', {
       meta: {

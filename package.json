@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Native knowledge context for DeepSeek Harness",
   "homepage": "https://github.com/memorax-ai/dsh-patchouli#readme",
   "bugs": {

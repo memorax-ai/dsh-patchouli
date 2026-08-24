@@ -417,6 +417,11 @@ export function apply(ctx: Context, config: Config): void {
           type: 'integer',
           description: 'Optional positive maximum number of results requested from each plugin.',
         },
+        metadata: {
+          type: 'object',
+          additionalProperties: true,
+          description: 'Optional plugin-defined JSON metadata used to refine retrieval.',
+        },
       },
       output: {
         schema: { type: 'string' },
@@ -435,6 +440,7 @@ export function apply(ctx: Context, config: Config): void {
           data: snapshot({
             query,
             ...args.limit === undefined ? {} : { limit: args.limit },
+            ...args.metadata === undefined ? {} : { metadata: args.metadata },
           }),
         }, exec.signal)
         warnFailures(ctx, 'retrieve', outcomes)
