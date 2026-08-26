@@ -95,6 +95,11 @@ interface SessionEventWindowSnapshot {
   readonly endSeq?: number
 }
 
+interface SessionLogSnapshot {
+  readonly session: SessionHeaderSnapshot
+  readonly events: readonly SessionEventSnapshot[]
+}
+
 /** Structural view of the concrete `@deepseek-ai/dsh-session-query` service. */
 export interface SessionQueryReader<TSessionId extends string = string> {
   searchSessions(
@@ -166,6 +171,7 @@ export interface SessionQueryReader<TSessionId extends string = string> {
     readonly header: SessionHeaderSnapshot
   }[]>
   listEvents(sessionId: TSessionId): Promise<readonly SessionEventRecordSnapshot[]>
+  readSession?(sessionId: TSessionId): Promise<SessionLogSnapshot>
   readEvent(
     request: {
       readonly sessionId: TSessionId
@@ -461,17 +467,31 @@ export class SessionIndex<TSessionId extends string = string> implements NativeC
     const records: SessionContextRecord[] = []
     let session: SessionHeaderSnapshot | undefined
 
-    for (const record of selected) {
+    if (this.sessionQuery.readSession !== undefined) {
+      const snapshot = await abortable(this.sessionQuery.readSession(sessionId), context.signal)
       context.signal?.throwIfAborted()
-      const window = await this.sessionQuery.readEvent({
-        sessionId,
-        seq: record.seq,
-        before: 0,
-        after: 0,
-      }, context.signal)
-      context.signal?.throwIfAborted()
-      session ??= window.session
-      records.push(normalizeEvent(window.session, record.surface, window.target))
+      session = snapshot.session
+      const eventsBySeq = new Map(snapshot.events.map(event => [event.seq, event]))
+      for (const record of selected) {
+        const event = eventsBySeq.get(record.seq)
+        if (event === undefined) {
+          throw new Error(`session ${JSON.stringify(String(sessionId))} event ${record.seq} disappeared while indexing`)
+        }
+        records.push(normalizeEvent(snapshot.session, record.surface, event))
+      }
+    } else {
+      for (const record of selected) {
+        context.signal?.throwIfAborted()
+        const window = await this.sessionQuery.readEvent({
+          sessionId,
+          seq: record.seq,
+          before: 0,
+          after: 0,
+        }, context.signal)
+        context.signal?.throwIfAborted()
+        session ??= window.session
+        records.push(normalizeEvent(window.session, record.surface, window.target))
+      }
     }
 
     if (session === undefined) {

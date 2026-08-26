@@ -91,6 +91,7 @@ const events = [
 function createReader(searchDisabled = false) {
   const reads: Array<{ sessionId: string, seq: number, before?: number, after?: number }> = []
   const signals: Array<AbortSignal | undefined> = []
+  let sessionReads = 0
   const reader: SessionQueryReader = {
     async searchSessions(request, exec) {
       exec?.signal?.throwIfAborted()
@@ -156,6 +157,11 @@ function createReader(searchDisabled = false) {
       assert.equal(sessionId, header.id)
       return events.map(({ data: _data, ...record }) => record)
     },
+    async readSession(sessionId) {
+      assert.equal(sessionId, header.id)
+      sessionReads += 1
+      return { session: header, events }
+    },
     async readEvent(request, signal) {
       reads.push(request)
       signals.push(signal)
@@ -165,11 +171,12 @@ function createReader(searchDisabled = false) {
       return { session: header, target }
     },
   }
-  return { reader, reads, signals }
+  return { reader, reads, signals, get sessionReads() { return sessionReads } }
 }
 
-test('indexes current agent-loop session into located normalized records', async () => {
-  const { reader, reads, signals } = createReader()
+test('indexes current agent-loop session with one complete log read', async () => {
+  const fixture = createReader()
+  const { reader, reads, signals } = fixture
   const controller = new AbortController()
   const result = await new SessionIndex(reader).index({
     meta: {
@@ -209,13 +216,9 @@ test('indexes current agent-loop session into located normalized records', async
   assert.equal(result.records[3]?.source.callId, 'call-1')
   assert.equal(result.nextAfterSeq, 4)
   assert.equal(result.hasMore, false)
-  assert.deepEqual(reads.map(read => [read.seq, read.before, read.after]), [
-    [1, 0, 0],
-    [2, 0, 0],
-    [3, 0, 0],
-    [4, 0, 0],
-  ])
-  assert.ok(signals.every(signal => signal === controller.signal))
+  assert.equal(fixture.sessionReads, 1)
+  assert.deepEqual(reads, [])
+  assert.deepEqual(signals, [])
 })
 
 test('searches Session history directly without a Patchouli copy', async () => {
@@ -262,7 +265,8 @@ test('scans all Sessions when cross-Session full-text search is disabled', async
 })
 
 test('uses explicit session id and exposes a bounded resume cursor', async () => {
-  const { reader, reads } = createReader()
+  const fixture = createReader()
+  const { reader, reads } = fixture
   const result = await new SessionIndex(reader).index({
     sessionId: header.id,
     meta: { attributes: { sessionId: 'ignored-session' } },
@@ -273,7 +277,8 @@ test('uses explicit session id and exposes a bounded resume cursor', async () =>
   assert.deepEqual(result.records.map(record => record.source.seq), [2, 3])
   assert.equal(result.nextAfterSeq, 3)
   assert.equal(result.hasMore, true)
-  assert.equal(reads.length, 2)
+  assert.equal(fixture.sessionReads, 1)
+  assert.equal(reads.length, 0)
 })
 
 test('honors cancellation and rejects oversized reads before querying', async () => {
