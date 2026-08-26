@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-session-indexer",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "DeepSeek Harness session indexer for Patchouli",
   "type": "module",
   "main": "./lib/index.js",
@@ -25,7 +25,7 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
     "@deepseek-ai/dsh-session-query": ">=0.1.0-rc.5 <0.2.0",
-    "dsh-patchouli": "0.1.4"
+    "dsh-patchouli": "0.1.5"
   },
   "devDependencies": {
     "dsh-patchouli": "workspace:*"

@@ -125,7 +125,7 @@ test('storage auto-start initializes a missing default database home', async (t)
     startupTimeoutMs: 10_000,
   })
 
-  assert.equal(ctx.patchouliStorage.server?.server.version, '0.1.4')
+  assert.equal(ctx.patchouliStorage.server?.server.version, '0.1.5')
   await assert.doesNotReject(() => readFile(join(root, 'config.json'), 'utf8'))
   await assert.doesNotReject(() => readFile(join(root, 'providers.json'), 'utf8'))
 })

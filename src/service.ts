@@ -438,7 +438,7 @@ export class PatchouliStorageService extends Service {
       this.handshake = await this.call<HandshakeResult>(methods.handshake, {
         client: {
           name: 'dsh-patchouli',
-          version: '0.1.4',
+          version: '0.1.5',
           instance_id: randomUUID(),
         },
         protocol_versions: [protocolVersion],
