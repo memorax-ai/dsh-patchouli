@@ -105,6 +105,8 @@ export interface MemoryPluginContext {
   readonly signal?: AbortSignal
 }
 
+export type MemoryPluginRetrieveResult = Promise<MemoryData> | AsyncIterable<MemoryData>
+
 export type MemoryOperation = 'update' | 'retrieve' | 'subscribe'
 
 export interface MemoryRouteCall {
@@ -150,7 +152,7 @@ export interface MemoryPlugin {
   retrieve(
     request: MemoryRetrieveRequest,
     context: MemoryPluginContext,
-  ): Promise<MemoryData>
+  ): MemoryPluginRetrieveResult
   subscribe?(
     request: MemoryPluginSubscribeRequest,
     handler: MemoryPluginChangeHandler,
@@ -169,6 +171,19 @@ export type MemoryPluginOutcome<T> =
       readonly ok: false
       readonly error: string
     }
+
+export type MemoryRetrieveProgress = MemoryPluginOutcome<MemoryData> & {
+  /** Provider results are partial until the final aggregate chunk is emitted. */
+  readonly complete: false
+}
+
+export interface MemoryRetrieveComplete {
+  readonly complete: true
+  readonly outcomes: readonly MemoryPluginOutcome<MemoryData>[]
+}
+
+export type MemoryRetrieveChunk = MemoryRetrieveProgress | MemoryRetrieveComplete
+export type MemoryRetrieveHandler = (chunk: MemoryRetrieveChunk) => void | Promise<void>
 
 interface RegisteredMemoryPlugin {
   readonly plugin: MemoryPlugin
@@ -239,12 +254,58 @@ export class PatchouliService extends Service {
   retrieve(
     request: MemoryRetrieveRequest,
     signal?: AbortSignal,
+    onChunk?: MemoryRetrieveHandler,
   ): Promise<readonly MemoryPluginOutcome<MemoryData>[]> {
-    return this.dispatch(
-      { operation: 'retrieve', meta: request.meta },
-      plugin => plugin.retrieve(request, { signal }),
-      signal,
-    )
+    return this.dispatchRetrieve(request, signal, onChunk)
+  }
+
+  /** Stream provider progress while preserving retrieve() as the final aggregate API. */
+  async *retrieveStream(
+    request: MemoryRetrieveRequest,
+    signal?: AbortSignal,
+  ): AsyncGenerator<MemoryRetrieveChunk, void, void> {
+    const lifetime = new AbortController()
+    const onAbort = () => lifetime.abort(signal?.reason ?? new Error('memory retrieval aborted'))
+    signal?.addEventListener('abort', onAbort, { once: true })
+    if (signal?.aborted) onAbort()
+    const queue: Array<{
+      readonly chunk: MemoryRetrieveChunk
+      readonly consumed: () => void
+    }> = []
+    let wake = deferred<void>()
+    let finished = false
+    let failure: unknown
+    const retrieval = this.retrieve(request, lifetime.signal, chunk => new Promise<void>((resolve) => {
+      queue.push({ chunk, consumed: resolve })
+      wake.resolve()
+    })).catch((error: unknown) => {
+      failure = error
+    }).finally(() => {
+      finished = true
+      wake.resolve()
+    })
+
+    try {
+      while (!finished || queue.length > 0) {
+        if (queue.length === 0) {
+          await wake.promise
+          wake = deferred<void>()
+          continue
+        }
+        const item = queue.shift()!
+        try {
+          yield item.chunk
+        } finally {
+          item.consumed()
+        }
+      }
+      if (failure !== undefined) throw failure
+      await retrieval
+    } finally {
+      signal?.removeEventListener('abort', onAbort)
+      if (!finished) lifetime.abort(new Error('memory retrieval stream closed'))
+      for (const item of queue.splice(0)) item.consumed()
+    }
   }
 
   async subscribe(
@@ -364,6 +425,76 @@ export class PatchouliService extends Service {
     }))
     signal?.throwIfAborted()
     return outcomes.filter((outcome): outcome is MemoryPluginOutcome<T> => outcome !== undefined)
+  }
+
+  private async dispatchRetrieve(
+    request: MemoryRetrieveRequest,
+    signal?: AbortSignal,
+    onChunk?: MemoryRetrieveHandler,
+  ): Promise<readonly MemoryPluginOutcome<MemoryData>[]> {
+    signal?.throwIfAborted()
+    const call: MemoryRouteCall = { operation: 'retrieve', meta: request.meta }
+    let emission = Promise.resolve()
+    const emit = (chunk: MemoryRetrieveChunk): Promise<void> => {
+      if (onChunk === undefined) return Promise.resolve()
+      const next = emission.then(() => onChunk(chunk))
+      emission = next.then(() => undefined)
+      return next
+    }
+    const outcomes = await Promise.all([...this.plugins.values()].map(async (
+      registration,
+    ): Promise<MemoryPluginOutcome<MemoryData> | undefined> => {
+      const { plugin } = registration
+      try {
+        if (!this.shouldRoute(registration, call)) return undefined
+        const timeoutMs = positiveTimeout(
+          this.routing[plugin.id]?.retrieveTimeoutMs,
+          this.retrieveTimeoutMs,
+        )
+        const startedAt = Date.now()
+        const result = plugin.retrieve(request, { signal })
+        let value: MemoryData
+        if (isAsyncIterable<MemoryData>(result)) {
+          value = null
+          const iterator = result[Symbol.asyncIterator]()
+          for (;;) {
+            const remaining = Math.max(1, timeoutMs - (Date.now() - startedAt))
+            const step = await waitForProvider(
+              iterator.next(),
+              signal,
+              remaining,
+              `${plugin.id} retrieve`,
+            )
+            if (step.done) break
+            value = step.value
+            await emit({ pluginId: plugin.id, ok: true, value, complete: false })
+          }
+        } else {
+          value = await waitForProvider(
+            result,
+            signal,
+            timeoutMs,
+            `${plugin.id} retrieve`,
+          )
+          await emit({ pluginId: plugin.id, ok: true, value, complete: false })
+        }
+        return { pluginId: plugin.id, ok: true, value }
+      } catch (error: unknown) {
+        const outcome = {
+          pluginId: plugin.id,
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        } as const
+        await emit({ ...outcome, complete: false })
+        return outcome
+      }
+    }))
+    signal?.throwIfAborted()
+    const completed = outcomes.filter(
+      (outcome): outcome is MemoryPluginOutcome<MemoryData> => outcome !== undefined,
+    )
+    await emit({ complete: true, outcomes: completed })
+    return completed
   }
 
   private shouldRoute(
@@ -552,6 +683,22 @@ async function waitForProvider<T>(
     if (timer !== undefined) clearTimeout(timer)
     if (onAbort !== undefined) signal?.removeEventListener('abort', onAbort)
   }
+}
+
+function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
+  return typeof value === 'object'
+    && value !== null
+    && Symbol.asyncIterator in value
+    && typeof value[Symbol.asyncIterator] === 'function'
+}
+
+function deferred<T>(): {
+  readonly promise: Promise<T>
+  readonly resolve: (value: T | PromiseLike<T>) => void
+} {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  const promise = new Promise<T>(complete => { resolve = complete })
+  return { promise, resolve }
 }
 
 function positiveTimeout(value: number | undefined, fallback: number): number {

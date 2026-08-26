@@ -67,9 +67,9 @@ test('pins all second-wave Harmony seams to exact published versions', () => {
     new URL('../cordis.patch.yml', import.meta.url),
     'utf8',
   )
-  assert.match(
+  assert.doesNotMatch(
     cordisPatch,
-    /id: patchouli-goojfc-memory-evolve\s+name: dsh-memory-evolve\s+disabled: true/,
+    /patchouli-goojfc|dsh-memory-evolve/,
   )
 
   const graphSource = readFileSync(

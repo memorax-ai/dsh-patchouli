@@ -1,0 +1,3 @@
+- insert:
+    - id: patchouli-native-context
+      name: dsh-patchouli-native-context-service

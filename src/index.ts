@@ -5,8 +5,10 @@ import {
   type MemoryRoutePolicy,
   type MemoryServiceConfig,
 } from './memory.js'
+import { installPatchouliSettings } from './settings.js'
 
 export * from './memory.js'
+export * from './settings.js'
 
 /** Cordis plugin identity used by loader diagnostics and model provenance. */
 export const name = 'dsh-patchouli'
@@ -49,4 +51,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     retrieveTimeoutMs: config.retrieveTimeoutMs ?? 30_000,
   }
   ctx.plugin(PatchouliService, serviceConfig)
+  installPatchouliSettings(ctx, {
+    retrieveTimeoutMs: config.retrieveTimeoutMs ?? 30_000,
+  })
 }

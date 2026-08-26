@@ -14,6 +14,7 @@ import {
   type MemoryPlugin,
   type MemoryPluginChangeHandler,
   type MemoryPluginSubscribeRequest,
+  type MemoryRetrieveChunk,
   type MemoryRouteCall,
   type MemorySubscription,
   type MemorySubscriptionFailure,
@@ -112,6 +113,57 @@ test('routes update and retrieve to registered plugins and aggregates outcomes',
     ['first', 'retrieve', retrieveRequest, controller.signal],
     ['second', 'retrieve', retrieveRequest, controller.signal],
   ])
+})
+
+test('streams incremental retrieval and marks the final aggregate complete', async (t) => {
+  const { fiber, memory } = await mountPatchouli()
+  t.after(() => fiber.dispose())
+  memory.register({
+    id: 'streaming',
+    async update() { return null },
+    async *retrieve() {
+      yield { phase: 'evidence', items: ['first'] }
+      yield { phase: 'answer', items: ['first', 'second'] }
+    },
+  })
+  const request = {
+    meta: { source: { type: 'test', id: 'stream' }, scope: 'test' },
+    data: { query: 'incremental' },
+  }
+
+  const chunks = []
+  for await (const chunk of memory.retrieveStream(request)) chunks.push(chunk)
+  assert.deepEqual(chunks, [
+    {
+      pluginId: 'streaming',
+      ok: true,
+      value: { phase: 'evidence', items: ['first'] },
+      complete: false,
+    },
+    {
+      pluginId: 'streaming',
+      ok: true,
+      value: { phase: 'answer', items: ['first', 'second'] },
+      complete: false,
+    },
+    {
+      complete: true,
+      outcomes: [{
+        pluginId: 'streaming',
+        ok: true,
+        value: { phase: 'answer', items: ['first', 'second'] },
+      }],
+    },
+  ])
+
+  const progress: MemoryRetrieveChunk[] = []
+  const outcomes = await memory.retrieve(request, undefined, chunk => { progress.push(chunk) })
+  assert.equal(progress.at(-1)?.complete, true)
+  assert.deepEqual(outcomes, [{
+    pluginId: 'streaming',
+    ok: true,
+    value: { phase: 'answer', items: ['first', 'second'] },
+  }])
 })
 
 test('times out one retrieval provider without blocking successful peers', async (t) => {

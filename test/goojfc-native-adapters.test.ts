@@ -19,9 +19,25 @@ const meta = {
   attributes: { workspaceRoot: '/workspace/project' },
 } as const
 
-test('publishes every exact-version Harmony patch with GOOJFC', () => {
+test('keeps exact-version Harmony patches available without installing them by default', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
   assert.deepEqual(manifest.dsh.harmony.patches, [
+    './patches/settings-nav-icon.patch.cjs',
+    './patches/native-context-at.patch.cjs',
+  ])
+  const settingsPatch = require('../patches/settings-nav-icon.patch.cjs')
+  assert.equal(settingsPatch[0].id, 'patchouli-settings-nav-icon')
+  assert.equal(settingsPatch[0].target.package, '@deepseek-ai/dsh-client-ui-settings-general')
+  const nativeContextAtPatch = require('../patches/native-context-at.patch.cjs')
+  assert.deepEqual(nativeContextAtPatch.map((patch: { readonly id: string }) => patch.id), [
+    'native-context-at-stream',
+    'native-context-at-source-order',
+    'native-context-at-boundary-highlight',
+    'native-context-at-bounded-navigation',
+    'native-context-at-progressive-navigation',
+    'native-context-at-mirrored-menu',
+  ])
+  const patchSources = [
     './patches/openviking.patch.cjs',
     './patches/hindsight.patch.cjs',
     './patches/memos.patch.cjs',
@@ -36,9 +52,9 @@ test('publishes every exact-version Harmony patch with GOOJFC', () => {
     './patches/graph-memory.patch.cjs',
     './patches/engramory.patch.cjs',
     './patches/memory-evolve.patch.cjs',
-  ])
+  ]
   assert.ok(manifest.files.includes('patches'))
-  for (const relativePath of manifest.dsh.harmony.patches as string[]) {
+  for (const relativePath of patchSources) {
     const source = readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8')
     assert.doesNotMatch(source, /dsh-patchouli\/goojfc/)
   }

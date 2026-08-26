@@ -2,17 +2,6 @@
     - id: patchouli
       name: dsh-patchouli
 
-    - id: patchouli-goojfc
-      name: dsh-patchouli/goojfc
-
-    - id: patchouli-goojfc-graph-memory
-      name: dsh-patchouli/goojfc/graph-memory
-      disabled: true
-
-    - id: patchouli-goojfc-memory-evolve
-      name: dsh-memory-evolve
-      disabled: true
-
     - id: patchouli-storage
       name: dsh-patchouli/storage
 
