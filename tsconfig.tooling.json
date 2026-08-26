@@ -11,6 +11,7 @@
   },
   "include": [
     "integration/**/*.ts",
+    "packages/fleet/test/**/*.ts",
     "packages/protocol/test/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts"
