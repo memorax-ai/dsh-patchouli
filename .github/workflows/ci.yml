@@ -6,6 +6,12 @@ on:
     tags: ['v*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_native_context:
+        description: Publish the current Native Context Service package version
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -175,6 +181,7 @@ jobs:
           pnpm --filter patchouli-db pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-agent-loop pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-artifact-ingestor pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
+          pnpm --filter dsh-patchouli-native-context-service pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-session-indexer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm --filter dsh-patchouli-workspace-indexer pack --pack-destination "$GITHUB_WORKSPACE/artifacts"
           pnpm pack --pack-destination artifacts
@@ -225,6 +232,7 @@ jobs:
             patchouli-db
             dsh-patchouli-agent-loop
             dsh-patchouli-artifact-ingestor
+            dsh-patchouli-native-context-service
             dsh-patchouli-session-indexer
             dsh-patchouli-workspace-indexer
             dsh-patchouli
@@ -236,6 +244,31 @@ jobs:
             fi
             npm publish "./artifacts/${package}-${version}.tgz" --access public
           done
+
+  publish-native-context:
+    name: Publish Native Context Service
+    needs: package-plugin
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_native_context
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.11.1
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Download npm packages
+        uses: actions/download-artifact@v4
+        with:
+          name: dsh-patchouli-${{ github.sha }}
+          path: artifacts
+
+      - name: Publish Native Context Service
+        run: npm publish ./artifacts/dsh-patchouli-native-context-service-*.tgz --access public
 
   package-daemon:
     name: Package daemon (${{ matrix.artifact }})

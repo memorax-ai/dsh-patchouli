@@ -25,6 +25,7 @@ const manifests = [
   'packages/db/package.json',
   'packages/agent-loop/package.json',
   'packages/artifact-ingestor/package.json',
+  'packages/native-context-service/package.json',
   'packages/session-indexer/package.json',
   'packages/workspace-indexer/package.json',
 ]
