@@ -7,6 +7,7 @@ import {
   type ChildProcessByStdio,
 } from 'node:child_process'
 import { once } from 'node:events'
+import { readFileSync } from 'node:fs'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -39,6 +40,9 @@ interface CrudResponse {
 }
 
 const run = promisify(execFile)
+const packageVersion = (JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+) as { version: string }).version
 const binary = resolve(
   'target',
   'debug',
@@ -125,7 +129,7 @@ test('storage auto-start initializes a missing default database home', async (t)
     startupTimeoutMs: 10_000,
   })
 
-  assert.equal(ctx.patchouliStorage.server?.server.version, '0.1.5')
+  assert.equal(ctx.patchouliStorage.server?.server.version, packageVersion)
   await assert.doesNotReject(() => readFile(join(root, 'config.json'), 'utf8'))
   await assert.doesNotReject(() => readFile(join(root, 'providers.json'), 'utf8'))
 })
