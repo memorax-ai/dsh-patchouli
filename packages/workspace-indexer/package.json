@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-workspace-indexer",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "DeepSeek Harness workspace indexer for Patchouli",
   "type": "module",
   "main": "./lib/index.js",
@@ -26,7 +26,7 @@
     "@deepseek-ai/cordis": "^4.0.1",
     "@deepseek-ai/dsh-fs": ">=0.1.0-rc.5 <0.2.0",
     "@deepseek-ai/dsh-workspace": ">=0.1.0-rc.5 <0.2.0",
-    "dsh-patchouli": "0.1.5"
+    "dsh-patchouli": "0.1.6"
   },
   "devDependencies": {
     "dsh-patchouli": "workspace:*"

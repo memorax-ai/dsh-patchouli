@@ -29,10 +29,7 @@ while `exports["./client"]` contributes the browser UI through the Harness
 
 ## UI container
 
-The browser architecture is a container plus frontend surfaces. The
-`@ch4acko3/dsh-ui-container` Cordis plugin provides `ctx.uiContainer` and
-does not register a Harness page by itself. A frontend connects a unique
-`surfaceId` and receives a scoped `UiSurfaceConnection`:
+The browser architecture is a container plus frontend surfaces. These primitives are embedded in `dsh-patchouli-memory-ui`; the former standalone `dsh-ui-container` and `dsh-ui-workspace` packages are deprecated and are not runtime dependencies. The Memory UI installs its browser-local container, connects a unique `surfaceId`, and receives a scoped `UiSurfaceConnection`:
 
 ```ts
 const { surface, disconnect } = ctx.uiContainer.connectSurface({
@@ -72,11 +69,7 @@ pre-renders a subtree for transport. A remote provider sends document
 projections and revision events through the data contract; Workspace renders
 them locally. Container nesting therefore does not increase network traffic.
 
-`@ch4acko3/dsh-ui-workspace` is an optional preset layer above the
-container. It provides the Explorer pane stack and sashes, tabbed editor,
-document surface, renderer pipeline and document-action registry. It does not
-provide a Cordis service or claim a Harness slot. A frontend can use these
-presets, replace one of them, or build directly against the container.
+The embedded workspace layer above the container provides the Explorer pane stack and sashes, tabbed editor, document surface, renderer pipeline and document-action registry. It does not provide a separate Cordis service or claim a Harness slot. The Memory UI can replace one of these primitives or build directly against its container.
 
 Frontends independently register their Harness entry, toolbar, panes, renderer
 slots and auxiliary panels, so adding a graph or audit frontend does not modify
@@ -90,8 +83,7 @@ Workspace. Revisions suppress unchanged payloads, while subscriptions transmit
 only invalidations. The endpoint owner authenticates and authorizes the channel
 before exposing the container; a remote peer never receives the Cordis service
 object. Surface open/reveal/close commands require a separate capability that is
-disabled by default. See
-[`dsh-ui-container`](https://github.com/CH4ACKO3/dsh-ui-container#remote-transport).
+disabled by default.
 
 Patchouli connects the first surface as `patchouli.memory`, composes its page
 from Workspace presets, and mounts it into Harness's official

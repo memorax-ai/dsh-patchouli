@@ -24,7 +24,7 @@ export {
 
 const CORE_NAMESPACE = 'dsh-patchouli'
 const NATIVE_NAMESPACE = 'dsh-patchouli-native-context'
-const FLEET_NAMESPACE = 'dsh-fleet-patchouli'
+const FLEET_NAMESPACE = 'dsh-agent-fleet-patchouli'
 const STYLE_ID = 'dsh-patchouli-settings-style'
 
 export const PATCHOULI_SETTINGS_SLOTS = {

@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-native-context-service",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Native local context indexing and retrieval for Patchouli",
   "type": "module",
   "main": "./lib/index.js",
@@ -40,7 +40,7 @@
     "@deepseek-ai/dsh-typert-protocol": ">=0.1.0-rc.8 <0.1.2-0",
     "@deepseek-ai/dsh-typert-registry": ">=0.1.0-rc.8 <0.1.2-0",
     "@deepseek-ai/dsh-workspace": ">=0.1.0-rc.5 <0.2.0",
-    "dsh-patchouli": "0.1.5"
+    "dsh-patchouli": "0.1.6"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-session-query": {

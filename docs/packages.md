@@ -34,8 +34,6 @@ Every plugin is a direct dependency of the target DSH profile. The root plugin d
 Published packages:
 
 ```bash
-dsh plugin --profile web add @ch4acko3/dsh-ui-container
-dsh plugin --profile web add @ch4acko3/dsh-ui-workspace
 dsh plugin --profile web add dsh-patchouli-memory-ui
 dsh plugin --profile web add dsh-patchouli
 ```
@@ -43,11 +41,11 @@ dsh plugin --profile web add dsh-patchouli
 Local checkout:
 
 ```bash
-dsh plugin --profile web add github:CH4ACKO3/dsh-ui-container
-dsh plugin --profile web add github:CH4ACKO3/dsh-ui-workspace
 dsh plugin --profile web add ./packages/memory-ui
 dsh plugin --profile web add .
 ```
+
+`dsh-patchouli-memory-ui` contains the document container and workspace primitives it uses. The former standalone `dsh-ui-container` and `dsh-ui-workspace` packages are deprecated and are neither installed nor required.
 
 A GitHub dependency resolves the repository root package only. It cannot select `packages/memory-ui`, so workspace plugins must be published, installed from a local directory or tarball, or moved to their own repository.
 

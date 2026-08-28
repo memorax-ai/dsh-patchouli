@@ -1,6 +1,6 @@
 {
   "name": "patchouli-db",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Platform-aware Patchouli database daemon installer and launcher",
   "type": "module",
   "main": "./lib/index.js",
