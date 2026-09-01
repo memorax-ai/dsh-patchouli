@@ -12,6 +12,8 @@ import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import test from 'node:test'
 
+import ts from 'typescript'
+
 import {
   createEngramoryAdapter,
   createGraphMemoryAdapter,
@@ -39,7 +41,7 @@ test('pins all second-wave Harmony seams to exact published versions', () => {
   const expected = [
     ['memory-gate', 'dsh-memory-gate', '0.9.0', [1, 1, 1, 1]],
     ['lingshu', '@furongjun1999/dsh-memory', '0.2.8', [1, 1, 1, 1]],
-    ['engramory', 'dsh-engramory', '0.2.0', [1, 1, 1]],
+    ['engramory', 'dsh-engramory', '0.2.1', [1, 1]],
     ['memory-evolve', 'dsh-memory-evolve', '0.1.0', [1, 1, 1]],
   ] as const
 
@@ -92,7 +94,8 @@ test('pins all second-wave Harmony seams to exact published versions', () => {
   )
   assert.match(engramorySource, /\["tools", "patchouliGoojfc"\]/)
   assert.doesNotMatch(engramorySource, /PropertyAssignment\[name\.name="required"\]/)
-  assert.match(engramorySource, /disable-unsupported-skill-service/)
+  assert.match(engramorySource, /registerSkill: false/)
+  assert.doesNotMatch(engramorySource, /disable-unsupported-skill-service/)
 
   const lingshuSource = readFileSync(
     new URL('../patches/lingshu.patch.cjs', import.meta.url),
@@ -108,6 +111,85 @@ test('pins all second-wave Harmony seams to exact published versions', () => {
     )
     assert.doesNotMatch(patchSource, /dsh-patchouli\/goojfc/)
   }
+})
+
+test('adapts Engramory 0.2.1 and disables its native skill through public config', () => {
+  interface SourcePatch {
+    readonly id: string
+    readonly expect: number
+    apply(context: {
+      node: ts.Node
+      sourceFile: ts.SourceFile
+      edit: {
+        appendRight(position: number, content: string): void
+        overwrite(start: number, end: number, content: string): void
+      }
+      ts: typeof ts
+    }): void
+  }
+
+  const patches = require('../patches/engramory.patch.cjs') as SourcePatch[]
+  const target = `
+export const inject = ['tools']
+export function apply(ctx, config = {}) {
+  const settings = {
+    indexName: indexNameOf(config.indexName),
+    maxLines: positive(config.maxLines, 200),
+    maxBytes: positive(config.maxBytes, 25600),
+  }
+  ctx.tools.guard((exec) => refuseOversizedIndex(exec, settings))
+  if (config.registerSkill !== false) {
+    ctx.inject(['skills'], (inner) => {
+      inner.effect(() => inner.skills.register({ name: 'engramory' }))
+    })
+  }
+}
+`
+  let transformed = target
+  for (const patch of patches) {
+    const sourceFile = ts.createSourceFile(
+      'index.js',
+      transformed,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.JS,
+    )
+    const matches: ts.Node[] = []
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isVariableDeclaration(node)
+        && ts.isIdentifier(node.name)
+        && node.name.text === (patch.id === 'goojfc-engramory-order' ? 'inject' : 'settings')
+      ) matches.push(node)
+      ts.forEachChild(node, visit)
+    }
+    visit(sourceFile)
+    assert.equal(matches.length, patch.expect)
+
+    const edits: Array<{ start: number, end: number, content: string }> = []
+    for (const node of matches) {
+      patch.apply({
+        node,
+        sourceFile,
+        edit: {
+          appendRight(position, content) { edits.push({ start: position, end: position, content }) },
+          overwrite(start, end, content) { edits.push({ start, end, content }) },
+        },
+        ts,
+      })
+    }
+    for (const edit of edits.sort((a, b) => b.start - a.start || b.end - a.end)) {
+      transformed = transformed.slice(0, edit.start) + edit.content + transformed.slice(edit.end)
+    }
+  }
+
+  assert.match(transformed, /export const inject = \["tools", "patchouliGoojfc"\]/)
+  assert.match(transformed, /config = \{ \.\.\.config, registerSkill: false \}/)
+  assert.match(transformed, /ctx\.provide\("goojfcEngramory"/)
+  assert.ok(
+    transformed.indexOf('registerSkill: false')
+      < transformed.indexOf('if (config.registerSkill !== false)'),
+  )
 })
 
 test('routes memory-gate through its native authority service', async () => {

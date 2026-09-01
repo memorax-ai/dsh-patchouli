@@ -1,6 +1,6 @@
 const target = {
   package: 'dsh-engramory',
-  version: '0.2.0',
+  version: '0.2.1',
   file: 'index.js',
 }
 
@@ -31,6 +31,8 @@ module.exports = [{
       throw new Error('Engramory settings declaration is no longer a variable statement')
     }
     edit.appendRight(statement.getEnd(), String.raw`
+  // Patchouli owns automatic recall in GOOJFC; keep Engramory's guard but skip its skill.
+  config = { ...config, registerSkill: false };
   if (typeof config.memoryRoot === "string" && config.memoryRoot.trim()) {
     ctx.provide("goojfcEngramory", ctx.patchouliGoojfc.createEngramoryAdapter({
       memoryRoot: config.memoryRoot,
@@ -41,13 +43,5 @@ module.exports = [{
       }, settings),
     }));
   }`)
-  },
-}, {
-  id: 'goojfc-engramory-disable-unsupported-skill-service',
-  target,
-  select: 'IfStatement:has(PropertyAccessExpression[expression.text="ctx"][name.text="skills"])',
-  expect: 1,
-  apply({ node, edit }) {
-    edit.remove(node.getFullStart(), node.getEnd())
   },
 }]

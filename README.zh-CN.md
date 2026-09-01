@@ -54,12 +54,15 @@ DeepSeek Harness 是目前首个受支持的集成，数据库后端本身不依
 | [Memory Gate](https://github.com/GIT121995/dsh-memory-gate) | `dsh-memory-gate@0.9.0` | Patch | 否（插件自管） |
 | [灵枢记忆](https://github.com/FuRongJun-1999/dsh-memory) | `@furongjun1999/dsh-memory@0.2.8` | Patch | 否（插件自管） |
 | [Graph Memory](https://github.com/adoresever/graph-memory) | `graph-memory@1.5.8` | Patch | 否（插件自管） |
-| [Engramory](https://github.com/tinqiao-oss/engramory/tree/master/adapters/dsh/plugin) | `dsh-engramory@0.2.0` | Patch | 否（插件自管） |
+| [Engramory](https://github.com/tinqiao-oss/engramory/tree/master/adapters/dsh/plugin) | `dsh-engramory@0.2.1` | Patch | 否（插件自管） |
 | [Memory Evolve](https://github.com/csyangwen/dsh-memory-evolve) | `dsh-memory-evolve@0.1.0` | Patch | 否（插件自管） |
 
 > 正在开发 DSH 插件，或想探索现有插件的兼容方式？欢迎尝试
 > [dsh-harmony](https://github.com/memorax-ai/dsh-harmony)，无需长期维护上游
 > fork，也能检查并适配插件行为。
+
+Engramory 兼容补丁会保留其索引保护，同时设置上游公开的
+`registerSkill: false` 选项。适配器启用时，Patchouli 是唯一的自动召回路径。
 
 ## 安装与使用
 

@@ -56,12 +56,16 @@ upstream integrations from version-pinned patches.
 | [Memory Gate](https://github.com/GIT121995/dsh-memory-gate) | `dsh-memory-gate@0.9.0` | Patch | No — plugin-managed |
 | [Lingshu Memory](https://github.com/FuRongJun-1999/dsh-memory) | `@furongjun1999/dsh-memory@0.2.8` | Patch | No — plugin-managed |
 | [Graph Memory](https://github.com/adoresever/graph-memory) | `graph-memory@1.5.8` | Patch | No — plugin-managed |
-| [Engramory](https://github.com/tinqiao-oss/engramory/tree/master/adapters/dsh/plugin) | `dsh-engramory@0.2.0` | Patch | No — plugin-managed |
+| [Engramory](https://github.com/tinqiao-oss/engramory/tree/master/adapters/dsh/plugin) | `dsh-engramory@0.2.1` | Patch | No — plugin-managed |
 | [Memory Evolve](https://github.com/csyangwen/dsh-memory-evolve) | `dsh-memory-evolve@0.1.0` | Patch | No — plugin-managed |
 
 > Building a DSH plugin or exploring compatibility with an existing one? Try
 > [dsh-harmony](https://github.com/memorax-ai/dsh-harmony) to inspect and adapt
 > plugin behavior without maintaining an upstream fork.
+
+The Engramory compatibility patch keeps its index guard but sets its documented
+`registerSkill: false` option. Patchouli is the only automatic recall path while
+the adapter is active.
 
 ## Install and use
 

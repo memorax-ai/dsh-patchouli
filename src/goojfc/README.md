@@ -68,7 +68,7 @@ The compatibility matrix pins these exact targets:
 - `dsh-memory-gate@0.9.0`
 - `@furongjun1999/dsh-memory@0.2.8`
 - `graph-memory@1.5.8`
-- `dsh-engramory@0.2.0`
+- `dsh-engramory@0.2.1`
 - `dsh-memory-evolve@0.1.0` at source commit
   `ce7f0faa0e0240f117c29795e9224c0d9ed18183`
 
@@ -78,7 +78,9 @@ graph node/edge upsert and recall implementation. It does not emulate the
 OpenClaw-only conversation extractor. Engramory is a DSH guard and skill that
 explicitly does not create its documented Markdown store; its adapter is only
 registered when the user configures an explicit `memoryRoot`, and delegates
-index-cap decisions back to the plugin's guard.
+index-cap decisions back to the plugin's guard. The patch retains that guard and
+sets Engramory's documented `registerSkill: false` option so Patchouli remains
+the only automatic recall path.
 
 Routing remains a Core concern. A provider may declare its own synchronous
 `filter`, a registering plugin may add another filter, and users may configure
