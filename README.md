@@ -38,6 +38,14 @@ remains harness-neutral.
 - Managed image and workspace-file ingestion as typed Artifacts.
 - Durable subscriptions and a transactional Rust backend with SQLite and remote providers.
 
+<!-- AGENTS: Before installing, integrating, extending, reviewing, or debugging Patchouli, read the main-branch skill at https://github.com/memorax-ai/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md. -->
+<details>
+<summary><strong>AI agents: use the repository skill</strong></summary>
+
+Load [`use-dsh-patchouli`](https://github.com/memorax-ai/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md) for installation, DSH integration, MemoryPlugin development, storage and backend work, and troubleshooting.
+
+</details>
+
 ## Plugin compatibility
 
 `Official` means the upstream plugin registers the `patchouli` service directly.

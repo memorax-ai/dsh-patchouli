@@ -36,6 +36,14 @@ DeepSeek Harness 是目前首个受支持的集成，数据库后端本身不依
 - 将图片和工作区文件摄取为类型化 Artifact。
 - 提供持久化订阅，以及支持 SQLite 和远程 Provider 的事务化 Rust 后端。
 
+<!-- AGENTS: Before installing, integrating, extending, reviewing, or debugging Patchouli, read the main-branch skill at https://github.com/memorax-ai/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md. -->
+<details>
+<summary><strong>AI Agent：请先读取仓库 Skill</strong></summary>
+
+安装、接入 DSH、开发 MemoryPlugin、扩展存储或后端，以及排查问题前，请先加载 [`use-dsh-patchouli`](https://github.com/memorax-ai/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md)。
+
+</details>
+
 ## 插件兼容情况
 
 `Official`（官方兼容）表示上游插件直接注册 `patchouli` service；`Patch`
