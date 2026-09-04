@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import test from 'node:test'
 
 import type { AgentHandle } from '@deepseek-ai/dsh-agent'
+import { createUserMessage } from '@deepseek-ai/dsh-llm/message'
 import type { Session, SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 
 import { SessionArchive, type SessionArchiveRuntime } from '../lib/archive.js'
@@ -66,12 +67,10 @@ test('reads cold history backward one bounded segment at a time', async () => {
 test('compacts and continues from a rebased native checkpoint', async () => {
   const root = await mkdtemp(join(tmpdir(), 'dsh-patchouli-fleet-'))
   const activeSession = session('session-a')
-  activeSession.append('user/message', {
-    id: 'message-a',
-    role: 'user',
+  activeSession.append('user/message', createUserMessage({
     content: [{ type: 'text', text: 'checkpoint' }],
     source: { kind: 'user' },
-  }, { surfaceOp: 'append' })
+  }), { surfaceOp: 'append' })
 
   let disposed = false
   const handle = {
