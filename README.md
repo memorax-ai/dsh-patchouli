@@ -35,6 +35,14 @@ remains harness-neutral.
 - Managed image and workspace-file ingestion as typed Artifacts.
 - Durable subscriptions and a transactional Rust backend with SQLite and remote providers.
 
+<!-- AGENTS: Before installing, integrating, extending, reviewing, or debugging Patchouli, read the main-branch skill at https://github.com/memorax-agent/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md. -->
+<details>
+<summary><strong>AI agents: use the repository skill</strong></summary>
+
+Load [`use-dsh-patchouli`](https://github.com/memorax-agent/dsh-patchouli/blob/main/.agents/skills/use-dsh-patchouli/SKILL.md) for installation, DSH integration, MemoryPlugin development, storage and backend work, and troubleshooting.
+
+</details>
+
 ## Install and use
 
 Requires Node.js `^22.19.0 || >=24`, pnpm 11, and a DeepSeek Harness runtime

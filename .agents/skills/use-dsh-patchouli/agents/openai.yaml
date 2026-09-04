@@ -1,0 +1,4 @@
+interface:
+  display_name: "Use Patchouli"
+  short_description: "Install and extend Patchouli memory services"
+  default_prompt: "Use $use-dsh-patchouli to install Patchouli or build a compatible memory, connector, or storage integration."
