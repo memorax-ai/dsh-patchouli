@@ -24,7 +24,21 @@ store:
 modelTools:
   retrieve: true
   update: true
+aggregation:
+  enabled: false
+  provider: ''
+  model: ''
+  maxTokens: 800
 ```
+
+When aggregation is enabled, `provider` and `model` are required. The connector
+sends the retrieval context and successful raw plugin results to one independent
+LLM call with a dedicated memory-aggregation system prompt. Its compact output,
+source IDs, complementarity, and conflicts are injected into the main Agent;
+Patchouli Core and the plugin results remain unchanged. The connector accepts
+only normally completed JSON whose excerpts occur verbatim in every named
+source. If the auxiliary call fails or returns invalid evidence, the connector
+logs the failure and injects the original result list.
 
 | Direction | Data point | Delivery |
 | --- | --- | --- |

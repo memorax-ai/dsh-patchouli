@@ -54,6 +54,7 @@
     "typecheck": "tsc -p packages/protocol/tsconfig.json && pnpm --filter patchouli-db typecheck && tsc -p tsconfig.json && tsc -p tsconfig.client.json && tsc -p tsconfig.tooling.json && pnpm --filter dsh-patchouli-agent-loop typecheck && pnpm --filter dsh-patchouli-artifact-ingestor typecheck && pnpm --filter dsh-patchouli-crud-test-plugin typecheck && pnpm --filter dsh-patchouli-fleet typecheck && pnpm --filter dsh-patchouli-session-indexer typecheck && pnpm --filter dsh-patchouli-workspace-indexer typecheck && pnpm --filter dsh-patchouli-native-context-service typecheck",
     "test": "pnpm run build && node --test \"test/*.test.ts\" \"packages/protocol/test/*.test.ts\" \"packages/db/test/*.test.ts\" \"packages/fleet/test/*.test.ts\" \"packages/native-context-service/test/*.test.ts\"",
     "test:e2e": "pnpm run build && cargo build --locked -p patchouli-server --bin patchouli-db && node --test integration/crud-plugin.ts",
+    "demo:recall": "pnpm run build && node scripts/demo-multi-source-recall.ts --benchmark --deepseek-v4-flash",
     "check": "pnpm run typecheck && pnpm run test",
     "prepare": "pnpm run build"
   },

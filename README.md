@@ -31,7 +31,7 @@ remains harness-neutral.
 ## Features
 
 - Common Memory Service with provider filters, user routing policies, and provenance.
-- Consumer-side aggregation that keeps native plugin results intact.
+- Consumer-side aggregation that keeps native plugin results intact, with optional dedicated-model evidence selection.
 - Incremental retrieval streams with backpressure and a final `complete` aggregate.
 - Agent Loop connector with configurable hooks and model tools.
 - Pluggable local or remote memory and knowledge implementations.
