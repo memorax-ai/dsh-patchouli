@@ -17,6 +17,9 @@ import type { NativeContextAlgorithmModule, NativeContextModuleContext } from '.
 export const REPAIR_HISTORY_BINDING = 'native-context/repair-history'
 export const REPAIR_HISTORY_DEFAULT_LIMIT = 10
 export const REPAIR_HISTORY_MAX_LIMIT = 50
+export const REPAIR_HISTORY_TEXT_LIMIT = 1_200
+const EVIDENCE_EXCERPT_LIMIT = 320
+const CALL_HISTORY_LIMIT = 256
 
 export interface RepairHistorySource {
   readonly kind: 'repair-history'
@@ -43,6 +46,7 @@ export interface RepairHistoryQueryHit {
   readonly score: number
   readonly text: string
   readonly source: RepairHistorySource
+  readonly truncated?: boolean
 }
 
 export interface RepairHistoryResult {
@@ -60,13 +64,13 @@ const profile: KnowledgeProfile = {
   epistemic: 'observation',
   temporal: { kind: 'unknown' },
   ownership: 'agent',
-  abstraction: 'pattern',
+  abstraction: 'instance',
   persistence: 'long_term',
   retrieval: ['exact', 'contextual'],
   actionability: 'informational',
 }
 
-/** Extracts compact failure -> corrective action -> successful result episodes. */
+/** Records related retry observations, without claiming that a repair caused success. */
 export class RepairHistoryAlgorithm implements NativeContextAlgorithmModule<
   RepairHistoryIngestRequest,
   RepairHistoryResult,
@@ -133,12 +137,14 @@ export class RepairHistoryAlgorithm implements NativeContextAlgorithmModule<
       if (typeof payload.text !== 'string') return []
       const source = payload.source
       if (!isRepairSource(source)) return []
-      return [{ score: hit.score, text: payload.text, source }]
+      const projection = recallText(payload)
+      return [{ score: hit.score, ...projection, source }]
     }))
     hits.sort((a, b) => b.score - a.score || b.source.time - a.source.time)
     return {
       hits: hits.slice(0, limit),
-      truncated: typeof page.meta.next_cursor === 'string' || hits.length > limit,
+      truncated: typeof page.meta.next_cursor === 'string' || hits.length > limit
+        || hits.slice(0, limit).some(hit => hit.truncated),
     }
   }
 }
@@ -146,6 +152,15 @@ export class RepairHistoryAlgorithm implements NativeContextAlgorithmModule<
 interface Episode {
   readonly text: string
   readonly source: RepairHistorySource
+  readonly observation: {
+    readonly policy: 'related-recovery-v2'
+    readonly status: 'observed-unverified'
+    readonly tool: string
+    readonly target: string
+    readonly failureExcerpt: string
+    readonly laterResultExcerpt: string
+    readonly evidenceTruncated: boolean
+  }
 }
 
 interface RepairScanState {
@@ -161,6 +176,7 @@ function repairEpisodes(
   for (const record of records) {
     if (record.kind === 'tool-call' && record.source.callId !== undefined) {
       state.calls.set(record.source.callId, record)
+      while (state.calls.size > CALL_HISTORY_LIMIT) state.calls.delete(state.calls.keys().next().value!)
       continue
     }
     if (record.kind !== 'tool-result') continue
@@ -171,7 +187,11 @@ function repairEpisodes(
     const pending = state.pending
     if (pending === undefined) continue
     if (
-      record.source.seq - pending.source.seq > 100
+      record.source.sessionId !== pending.source.sessionId
+      || record.source.cwd !== pending.source.cwd
+      || record.source.seq <= pending.source.seq
+      || record.source.time < pending.source.time
+      || record.source.seq - pending.source.seq > 100
       || record.source.time - pending.source.time > 30 * 60_000
     ) {
       state.pending = undefined
@@ -183,17 +203,23 @@ function repairEpisodes(
     const successfulCall = record.source.callId === undefined
       ? undefined
       : state.calls.get(record.source.callId)
-    const parts = [
-      'Failure:',
-      failedCall?.text,
-      pending.text,
-      'Repair:',
-      successfulCall?.text,
-      'Successful result:',
-      record.text,
-    ].filter((part): part is string => typeof part === 'string' && part.trim() !== '')
+    const before = callIdentity(failedCall)
+    const after = callIdentity(successfulCall)
+    if (before === undefined || after === undefined || before.key !== after.key
+      || !substantiveResult(record.text)) continue
+    const observation: Episode['observation'] = {
+      policy: 'related-recovery-v2',
+      status: 'observed-unverified',
+      tool: before.tool,
+      target: excerpt(before.target, 160),
+      failureExcerpt: excerpt(pending.text, EVIDENCE_EXCERPT_LIMIT),
+      laterResultExcerpt: excerpt(record.text, EVIDENCE_EXCERPT_LIMIT),
+      evidenceTruncated: pending.text.length > EVIDENCE_EXCERPT_LIMIT
+        || record.text.length > EVIDENCE_EXCERPT_LIMIT || before.target.length > 160,
+    }
     episodes.push({
-      text: parts.join('\n'),
+      text: observationText(observation),
+      observation,
       source: {
         kind: 'repair-history',
         sessionId: record.source.sessionId,
@@ -212,6 +238,105 @@ function repairEpisodes(
     }
   }
   return episodes
+}
+
+function callIdentity(record: SessionContextRecord | undefined): {
+  readonly key: string
+  readonly tool: string
+  readonly target: string
+} | undefined {
+  if (record === undefined) return undefined
+  const data = object(record.data)
+  const line = record.text.indexOf('\n')
+  const tool = typeof data?.name === 'string' ? data.name : record.text.slice(0, line)
+  if (!tool || tool.length > 120) return undefined
+  let args: JsonObject | undefined
+  const raw = data?.arguments ?? (line < 0 ? undefined : record.text.slice(line + 1))
+  if (typeof raw === 'string') {
+    if (raw.length > 65_536) return undefined
+    try { args = object(JSON.parse(raw)) } catch { return undefined }
+  } else args = object(raw)
+  if (args === undefined) return undefined
+  // Compare full identifiers before shortening their display. Shell commands are
+  // eligible only for an exact retry; parsing shell text cannot prove a target.
+  const fields = ['file_path', 'path', 'id', 'task_id', 'taskId', 'goal_id', 'goalId',
+    'resourceId', 'documentId', 'teamId', 'run_id', 'runId', 'target', 'pattern', 'query', 'url', 'uri'] as const
+  const target = fields.flatMap(key => {
+    const value = args[key]
+    return (typeof value === 'string' && value.trim() !== '') || typeof value === 'number'
+      ? [[key, value] as const] : []
+  })
+  const command = typeof args.command === 'string' && args.command.trim() !== ''
+  if (target.length === 0 && !command) return undefined
+  // Match every parameter, including action and working directory. Relaxing this
+  // for arbitrary tools would mistake status/list calls for successful mutations.
+  let canonical: string
+  try {
+    const serialized = JSON.stringify(args)
+    if (serialized.length > 65_536) return undefined
+    canonical = JSON.stringify(JSON.parse(serialized, (_key, value: unknown) => {
+      const item = object(value)
+      return item === undefined ? value : Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
+    }))
+  } catch { return undefined }
+  return {
+    key: JSON.stringify([tool, canonical]), tool,
+    target: command ? 'same exact command and parameters (see source events)' : JSON.stringify(Object.fromEntries(target)),
+  }
+}
+
+function substantiveResult(text: string): boolean {
+  const value = text.trim()
+  return value !== '' && !/^(?:\[\]|\{\}|null)$/i.test(value)
+    && !/(?:^|\n)\s*(?:no (?:files?|matches|results)(?: found| matched)?\b|0 (?:files?|matches|results)\b)/i.test(value)
+}
+
+function excerpt(text: string, limit: number): string {
+  if (text.length <= limit) return text
+  // Preserve both ends so a trailing qualification is not silently dropped.
+  const marker = '\n[… excerpt truncated; consult source …]\n'
+  const remaining = limit - marker.length
+  return text.slice(0, Math.ceil(remaining / 2)) + marker + text.slice(-Math.floor(remaining / 2))
+}
+
+function observationText(value: Episode['observation']): string {
+  return excerpt([
+    'Observed recovery (unverified): a related tool retry later returned a non-error result.',
+    'This does not establish a causal repair or task completion; inspect source events before reuse.',
+    `Tool: ${value.tool}; target: ${value.target}`,
+    `Failure excerpt: ${value.failureExcerpt}`,
+    `Later result excerpt: ${value.laterResultExcerpt}`,
+  ].join('\n'), REPAIR_HISTORY_TEXT_LIMIT)
+}
+
+function recallText(payload: JsonObject): { readonly text: string; readonly truncated: boolean } {
+  const observation = object(payload.observation)
+  if (observation?.policy === 'related-recovery-v2'
+    && observation.status === 'observed-unverified'
+    && ['tool', 'target', 'failureExcerpt', 'laterResultExcerpt'].every(key => typeof observation[key] === 'string')) {
+    const bounded = {
+      policy: 'related-recovery-v2', status: 'observed-unverified',
+      tool: excerpt(observation.tool as string, 120),
+      target: excerpt(observation.target as string, 160),
+      failureExcerpt: excerpt(observation.failureExcerpt as string, EVIDENCE_EXCERPT_LIMIT),
+      laterResultExcerpt: excerpt(observation.laterResultExcerpt as string, EVIDENCE_EXCERPT_LIMIT),
+      evidenceTruncated: observation.evidenceTruncated === true,
+    } as const
+    return { text: observationText(bounded), truncated: bounded.evidenceTruncated
+      || ['tool', 'target', 'failureExcerpt', 'laterResultExcerpt'].some(key => observation[key] !== bounded[key as keyof typeof bounded]) }
+  }
+  // Old records remain immutable. Their original "Repair/Successful result"
+  // labels came from temporal adjacency and are not evidence of causality.
+  const raw = typeof payload.text === 'string' ? payload.text : ''
+  const failure = raw.startsWith('Failure:\n') ? raw.slice('Failure:\n'.length).split('\nRepair:\n')[0]! : raw
+  const resultAt = raw.lastIndexOf('\nSuccessful result:\n')
+  const later = resultAt < 0 ? '' : raw.slice(resultAt + '\nSuccessful result:\n'.length)
+  return { text: [
+    'Legacy recovery observation (unverified). Tool/target relation and causality were not checked.',
+    `Earlier failure excerpt: ${excerpt(failure, EVIDENCE_EXCERPT_LIMIT)}`,
+    `Later output excerpt (not proof of repair): ${excerpt(later, EVIDENCE_EXCERPT_LIMIT)}`,
+    'Read the source events to check applicability; this is a bounded projection of an unchanged legacy record.',
+  ].join('\n'), truncated: raw !== '' }
 }
 
 function failed(record: SessionContextRecord): boolean {
@@ -256,10 +381,10 @@ function knowledgeValue(episode: Episode): KnowledgeValue & JsonObject {
         recorded_at: now,
       }],
     },
-    extensions: {},
+    extensions: { 'dsh.repair-history': { policy: episode.observation.policy, status: episode.observation.status } },
   }
   return {
-    content: { kind: 'structured', value: jsonObject({ text: episode.text, source: episode.source }) },
+    content: { kind: 'structured', value: jsonObject({ text: episode.text, observation: episode.observation, source: episode.source }) },
     metadata,
     artifact: [],
     profile,
