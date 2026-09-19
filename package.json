@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Native knowledge context for DeepSeek Harness",
   "homepage": "https://github.com/memorax-ai/dsh-patchouli#readme",
   "bugs": {
@@ -42,6 +42,10 @@
     "./session-compat": {
       "types": "./lib/session-compat.d.ts",
       "import": "./lib/session-compat.js"
+    },
+    "./fleet": {
+      "types": "./lib/fleet/index.d.ts",
+      "import": "./lib/fleet/index.js"
     }
   },
   "files": [
@@ -53,7 +57,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p packages/protocol/tsconfig.json && pnpm --filter patchouli-db build && tsc -p tsconfig.json && pnpm run build:client && pnpm --filter dsh-patchouli-agent-loop build && pnpm --filter dsh-patchouli-artifact-ingestor build && pnpm --filter dsh-patchouli-crud-test-plugin build && pnpm --filter dsh-patchouli-fleet build && pnpm --filter dsh-patchouli-session-indexer build && pnpm --filter dsh-patchouli-workspace-indexer build && pnpm --filter dsh-patchouli-native-context-service build",
+    "build": "tsc -p packages/protocol/tsconfig.json && pnpm --filter patchouli-db build && tsc -p tsconfig.json && pnpm run build:client && pnpm --filter dsh-patchouli-agent-loop build && pnpm --filter dsh-patchouli-artifact-ingestor build && pnpm --filter dsh-patchouli-crud-test-plugin build && pnpm --filter dsh-patchouli-fleet build && pnpm --filter dsh-patchouli-session-indexer build && pnpm --filter dsh-patchouli-workspace-indexer build && pnpm --filter dsh-patchouli-native-context-service build && node scripts/stage-fleet.mjs",
     "build:client": "tsdown",
     "typecheck": "tsc -p packages/protocol/tsconfig.json && pnpm --filter patchouli-db typecheck && tsc -p tsconfig.json && tsc -p tsconfig.client.json && tsc -p tsconfig.tooling.json && pnpm --filter dsh-patchouli-agent-loop typecheck && pnpm --filter dsh-patchouli-artifact-ingestor typecheck && pnpm --filter dsh-patchouli-crud-test-plugin typecheck && pnpm --filter dsh-patchouli-fleet typecheck && pnpm --filter dsh-patchouli-session-indexer typecheck && pnpm --filter dsh-patchouli-workspace-indexer typecheck && pnpm --filter dsh-patchouli-native-context-service typecheck",
     "test": "pnpm run build && node --test \"test/*.test.ts\" \"packages/protocol/test/*.test.ts\" \"packages/db/test/*.test.ts\" \"packages/fleet/test/*.test.ts\" \"packages/native-context-service/test/*.test.ts\"",
@@ -95,7 +99,6 @@
     "@deepseek-ai/schemastery": "^3.18.1",
     "dsh-patchouli-agent-loop": "workspace:*",
     "dsh-patchouli-artifact-ingestor": "workspace:*",
-    "dsh-patchouli-fleet": "workspace:*",
     "dsh-patchouli-protocol": "workspace:*",
     "dsh-patchouli-session-indexer": "workspace:*",
     "dsh-patchouli-workspace-indexer": "workspace:*",
@@ -134,7 +137,8 @@
     "dsh-harmony": "^0.8.8",
     "react": "^18.2.0",
     "tsdown": "^0.22.14",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "dsh-patchouli-fleet": "workspace:*"
   },
   "keywords": [
     "deepseek-harness",

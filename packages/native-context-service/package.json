@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-native-context-service",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Native local context indexing and retrieval for Patchouli",
   "type": "module",
   "main": "./lib/index.js",

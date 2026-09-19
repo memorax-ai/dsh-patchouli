@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-workspace-indexer",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "DeepSeek Harness workspace indexer for Patchouli",
   "type": "module",
   "main": "./lib/index.js",

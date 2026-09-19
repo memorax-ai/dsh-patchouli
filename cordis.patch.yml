@@ -12,7 +12,7 @@
       name: dsh-patchouli-artifact-ingestor
 
     - id: patchouli-fleet
-      name: dsh-patchouli-fleet
+      name: dsh-patchouli/fleet
 
     - id: patchouli-session-indexer
       name: dsh-patchouli-session-indexer

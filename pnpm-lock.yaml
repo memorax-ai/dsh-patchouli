@@ -20,9 +20,6 @@ importers:
       dsh-patchouli-artifact-ingestor:
         specifier: workspace:*
         version: link:packages/artifact-ingestor
-      dsh-patchouli-fleet:
-        specifier: workspace:*
-        version: link:packages/fleet
       dsh-patchouli-protocol:
         specifier: workspace:*
         version: link:packages/protocol
@@ -123,6 +120,9 @@ importers:
       dsh-harmony:
         specifier: ^0.8.8
         version: 0.8.8(@deepseek-ai/dsh-brand@0.1.1-rc.2(@deepseek-ai/cordis@4.0.1)(@deepseek-ai/dsh-invariants@0.1.1-rc.2(@deepseek-ai/cordis@4.0.1)))(@deepseek-ai/dsh-invariants@0.1.1-rc.2(@deepseek-ai/cordis@4.0.1))
+      dsh-patchouli-fleet:
+        specifier: workspace:*
+        version: link:packages/fleet
       react:
         specifier: ^18.2.0
         version: 18.3.1

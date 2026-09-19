@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-agent-loop",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Official DeepSeek Harness Agent Loop adapter for Patchouli",
   "type": "module",
   "main": "./lib/index.js",
