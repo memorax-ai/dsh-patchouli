@@ -24,8 +24,8 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-fs": ">=0.1.0-rc.5 <0.2.0",
-    "@deepseek-ai/dsh-workspace": ">=0.1.0-rc.5 <0.2.0",
+    "@deepseek-ai/dsh-fs": ">=0.1.0-rc.5 <0.2.0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0",
+    "@deepseek-ai/dsh-workspace": ">=0.1.0-rc.5 <0.2.0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0",
     "dsh-patchouli": "0.1.6"
   },
   "devDependencies": {

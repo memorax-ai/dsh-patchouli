@@ -1,9 +1,8 @@
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { MemoryClientContext as ClientContext } from './context.js'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import {
   JsonTree,
   MarkdownText,
-  MessageText,
   Pill,
   ReadBlock,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -90,21 +89,42 @@ function PreviewRenderer({ matched, t }: {
   )
 }
 
-function MarkdownRenderer({ matched }: { matched: MarkdownDocumentContent }) {
-  return <div className="patchouli-rich-document"><MarkdownText text={matched.text} /></div>
+function MessageText({ text }: { text: string }) {
+  return <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{text}</div>
+}
+
+function labels(t: PropsLocale<typeof NS>['t']) {
+  const copy = t('render.copy'), copied = t('render.copied')
+  const collapse = t('render.collapse'), expand = t('render.expand')
+  return {
+    markdown: { code: { copyLabel: copy, copiedLabel: copied }, footnotes: t('render.footnotes') },
+    read: { copy, copied, collapse, collapseAria: collapse,
+      expand: (hidden: number) => `${expand} (${hidden})`,
+      expandAria: (hidden: number) => `${expand} (${hidden})`,
+      window: (shown: number, total: number) => `${shown}/${total} ${t('render.lines')}` },
+    json: { copyValue: copy, copyJson: t('render.copyJson'), copyPath: t('render.copyPath'),
+      copyPrettyJson: t('render.copyPrettyJson'), copyCompactJson: t('render.copyJson'),
+      copied, copyFailed: t('render.copyFailed'), collapseNode: collapse, expandNode: expand,
+      copyButtonTitle: (action: string) => action },
+  }
+}
+
+function MarkdownRenderer({ matched, t }: { matched: MarkdownDocumentContent } & PropsLocale<typeof NS>) {
+  return <div className="patchouli-rich-document"><MarkdownText text={matched.text} {...{ labels: labels(t).markdown }} /></div>
 }
 
 function TextRenderer({ matched }: { matched: TextDocumentContent }) {
   return <div className="patchouli-rich-document"><MessageText text={matched.text} /></div>
 }
 
-function CodeRenderer({ matched, document }: {
+function CodeRenderer({ matched, document, t }: {
   matched: CodeDocumentContent
   document: DocumentSnapshot
-}) {
+} & PropsLocale<typeof NS>) {
   const lines = matched.text.split('\n').map((text, index) => ({ number: index + 1, text }))
   return (
     <ReadBlock
+      {...{ labels: labels(t).read }}
       label={matched.label ?? document.title ?? document.uri}
       lines={lines}
       totalLines={lines.length}
@@ -114,9 +134,9 @@ function CodeRenderer({ matched, document }: {
   )
 }
 
-function JsonRenderer({ matched }: { matched: JsonDocumentContent }) {
+function JsonRenderer({ matched, t }: { matched: JsonDocumentContent } & PropsLocale<typeof NS>) {
   return typeof matched.value === 'object' && matched.value !== null
-    ? <JsonTree data={matched.value as Record<string, unknown> | unknown[]} copyable expandTopLevel />
+    ? <JsonTree data={matched.value as Record<string, unknown> | unknown[]} {...{ label: t('detail.summary'), labels: labels(t).json }} copyable expandTopLevel />
     : <MessageText text={JSON.stringify(matched.value)} />
 }
 
@@ -131,9 +151,9 @@ function CompositeRenderer({ matched, renderPart }: {
   )
 }
 
-function UnknownRenderer({ matched }: { matched: DocumentSnapshot }) {
+function UnknownRenderer({ matched, t }: { matched: DocumentSnapshot } & PropsLocale<typeof NS>) {
   if (typeof matched.content === 'object' && matched.content !== null) {
-    return <JsonTree data={matched.content as Record<string, unknown> | unknown[]} copyable />
+    return <JsonTree data={matched.content as Record<string, unknown> | unknown[]} {...{ label: matched.title ?? matched.uri, labels: labels(t).json }} copyable />
   }
   return <MessageText text={String(matched.content ?? '')} />
 }
@@ -163,6 +183,7 @@ export function registerBuiltinDocumentRenderers(ctx: ClientContext): void {
     name: 'patchouli.document.renderer',
     priority: 500,
     select: ({ document }) => textContent(document.content, 'markdown'),
+    locale: NS,
   }, MarkdownRenderer))
 
   ctx.slots.inject('patchouli.document.renderer', () => ctx.slots.register({
@@ -178,6 +199,7 @@ export function registerBuiltinDocumentRenderers(ctx: ClientContext): void {
         label: typeof data?.label === 'string' ? data.label : undefined,
       } satisfies CodeDocumentContent
     },
+    locale: NS,
   }, CodeRenderer))
 
   ctx.slots.inject('patchouli.document.renderer', () => ctx.slots.register({
@@ -189,6 +211,7 @@ export function registerBuiltinDocumentRenderers(ctx: ClientContext): void {
         ? { type: 'json', value: data.value } satisfies JsonDocumentContent
         : null
     },
+    locale: NS,
   }, JsonRenderer))
 
   ctx.slots.inject('patchouli.document.renderer', () => ctx.slots.register({
@@ -201,5 +224,6 @@ export function registerBuiltinDocumentRenderers(ctx: ClientContext): void {
     name: 'patchouli.document.renderer',
     priority: 1000,
     select: ({ document }) => document,
+    locale: NS,
   }, UnknownRenderer))
 }

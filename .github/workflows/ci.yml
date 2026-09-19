@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -48,6 +48,9 @@ jobs:
 
       - name: Check project
         run: pnpm check
+
+      - name: Check Memory UI
+        run: pnpm --filter dsh-patchouli-memory-ui check
 
   rust_lint:
     name: Lint Rust

@@ -103,3 +103,7 @@ The name refers directly to
 [Patchouli Knowledge](https://en.touhouwiki.net/wiki/Patchouli_Knowledge), and
 also pays tribute to the widely known Minecraft mod
 [Patchouli](https://github.com/VazkiiMods/Patchouli).
+
+## DSH compatibility (2026-09-19)
+
+The Host and Agent/Native Context adapters retain the legacy baseline and now pass type checks against DSH 0.1.5-rc.2 and 0.1.6-alpha.2. History reads adapt to read-only persistence handles and always close them; session-start retrieval follows both lifecycle contracts without double injection. The optional Fleet archive adapter activates only when Fleet services exist. The complete check passes 174 tests with one skip. Isolated Web startup with Native Context and all seven Harmony patches passes on both upstream versions. Memory UI and live model/browser interactions are not covered by these checks.

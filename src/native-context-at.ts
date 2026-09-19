@@ -41,6 +41,8 @@ const JSON_CODEC = {
   // Keep the shared client contract dependency-free so DSH can materialize it
   // without requiring a separate browser-side Zod package factory.
   schema: { parse: (value: unknown) => value },
+  // DSH 0.1.6 materializes schemas lazily; older releases read schema directly.
+  create: () => ({ parse: (value: unknown) => value }),
 } as const
 
 export const NATIVE_CONTEXT_AT_INVOCATIONS = [{

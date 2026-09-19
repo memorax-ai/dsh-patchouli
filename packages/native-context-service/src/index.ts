@@ -1,3 +1,4 @@
+import { listSessionHeaders } from 'dsh-patchouli/session-compat'
 import type { Context } from '@deepseek-ai/cordis'
 import { WorkspaceId } from '@deepseek-ai/dsh-workspace'
 import type {} from '@deepseek-ai/dsh-session-query'
@@ -73,7 +74,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   }[]>) | undefined
 
   ctx.inject(['sessionPersistence'], (sourceCtx) => {
-    listPersistedSessions = signal => sourceCtx.sessionPersistence.list(signal)
+    listPersistedSessions = signal => listSessionHeaders(sourceCtx.sessionPersistence, signal)
     return () => { listPersistedSessions = undefined }
   })
 

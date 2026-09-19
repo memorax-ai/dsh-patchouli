@@ -1,6 +1,6 @@
 const inputTriggerTarget = {
 	package: '@deepseek-ai/dsh-client-ui-input-trigger',
-	version: '>=0.1.1-rc.2 <0.1.2-0',
+	version: '>=0.1.1-rc.2 <0.1.7-0',
 	file: 'lib/client.js',
 }
 

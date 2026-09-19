@@ -2,8 +2,10 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { BlockAssembler, createUserMessage, type UserMessage } from '@deepseek-ai/dsh-llm'
-import { snapshotJsonValue, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
-import type { SessionInspection } from '@deepseek-ai/dsh-session-persistence'
+import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
+import type {} from '@deepseek-ai/dsh-session-persistence'
+import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
+import { readSessionHistory, sessionEvents, type SessionHistory } from 'dsh-patchouli/session-compat'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import {
   defineTool,
@@ -189,17 +191,17 @@ function agentData(agent: Agent): Record<string, unknown> {
 }
 
 function turnEvents(session: Session, turn: number, endSeq?: number): readonly SessionEvent[] {
-  const start = session.events.findLastIndex(event => (
+  const start = sessionEvents(session).findLastIndex(event => (
     event.type === 'turn/start'
     && event.data.turn === turn
     && (endSeq === undefined || event.seq <= endSeq)
   ))
   if (start < 0) return []
-  return session.events.slice(start).filter(event => endSeq === undefined || event.seq <= endSeq)
+  return sessionEvents(session).slice(start).filter(event => endSeq === undefined || event.seq <= endSeq)
 }
 
 function turnStartSeq(session: Session, turn: number, endSeq: number): number {
-  const start = session.events.findLast(event => (
+  const start = sessionEvents(session).findLast(event => (
     event.type === 'turn/start'
     && event.data.turn === turn
     && event.seq <= endSeq
@@ -209,7 +211,7 @@ function turnStartSeq(session: Session, turn: number, endSeq: number): number {
 }
 
 function persistedTurn(
-  inspection: SessionInspection,
+  inspection: SessionHistory,
   turn: number,
   endSeq: number,
 ): { event: SessionEvent, events: readonly SessionEvent[] } {
@@ -742,7 +744,10 @@ export function apply(ctx: Context, config: Config): void {
   }
 
   if (retrieve.sessionStart) {
-    ctx.on('agent/session-start', ({ agent, source }) => {
+    const seen = new WeakSet<Session>()
+    const started = ({ agent, source }: { agent: Agent; source: unknown }): Promise<undefined> | undefined => {
+      if (seen.has(agent.session)) return
+      seen.add(agent.session)
       const task = (async (): Promise<void> => {
         const messages = await retrieveAt(
           agent,
@@ -757,6 +762,12 @@ export function apply(ctx: Context, config: Config): void {
         ctx.logger.warn(`patchouli session-start injection failed: ${message}`)
       })
       track(task)
+      return task.then(() => undefined)
+    }
+    // Before 0.1.6, source arrives on session-start; newer created events carry it.
+    ;(ctx.on as (event: 'agent/session-start', listener: typeof started) => unknown)('agent/session-start', started)
+    ctx.on('agent/created', payload => {
+      if ('source' in payload) return started({ agent: payload.agent, source: payload.source })
     })
   }
 
@@ -845,7 +856,8 @@ export function apply(ctx: Context, config: Config): void {
             () => ctx.sessions.flush(session),
           )
           lifetime.signal.throwIfAborted()
-          const inspection = await ctx.sessionPersistence.readFrom(
+          const inspection = await readSessionHistory(
+            ctx.sessionPersistence,
             session.header.id,
             startSeq,
             lifetime.signal,

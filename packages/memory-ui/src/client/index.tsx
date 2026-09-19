@@ -1,4 +1,4 @@
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { MemoryClientContext as ClientContext } from './context.js'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import {
   DocumentActionRegistry,
@@ -74,7 +74,8 @@ export function apply(ctx: ClientContext): void {
       'patchouli.document.renderer': { kind: 'chain', scope: 'session' },
       'patchouli.agent.surface': { kind: 'single', scope: 'session' },
     },
-    inject: () => ({
+    inject: (sessionId) => ({
+      sessionId: String(sessionId),
       documents: surface,
       explorerPanes: contributions.explorerPanes,
       documentActions: contributions.documentActions,

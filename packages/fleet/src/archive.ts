@@ -15,14 +15,14 @@ import type {
   SessionId,
   SessionStore,
 } from '@deepseek-ai/dsh-session'
-import type { SessionPersistence } from '@deepseek-ai/dsh-session-persistence'
+import { readSessionHistory, sessionEvents, type SessionHistoryReader } from 'dsh-patchouli/session-compat'
 
 import { ArchivePolicyStore, type ArchivePolicyOverride } from './policy-store.js'
 import { TimelineStore, type ArchiveTimeline } from './timeline.js'
 
 export interface SessionArchiveRuntime {
   readonly compaction: Pick<CompactionEngine, 'compactRegion'>
-  readonly persistence: Pick<SessionPersistence, 'readFrom'>
+  readonly persistence: SessionHistoryReader
   readonly sessions: Pick<SessionStore, 'flush'>
   create(options: CreateAgentOptions): Promise<AgentHandle>
   resume(options: ResumeAgentOptions): Promise<AgentHandle>
@@ -140,7 +140,7 @@ export class SessionArchive {
     if (!policy.enabled) return undefined
     const timeline = await this.timelines.attach(logicalId, String(handle.agent.id))
     const reasons: Array<'events' | 'size' | 'age'> = []
-    if (policy.maxEvents > 0 && handle.agent.session.events.length >= policy.maxEvents) reasons.push('events')
+    if (policy.maxEvents > 0 && sessionEvents(handle.agent.session).length >= policy.maxEvents) reasons.push('events')
     if (policy.maxMegabytes > 0
       && this.sessionBytes(handle.agent.session) >= policy.maxMegabytes * 1024 * 1024) reasons.push('size')
     const openedAt = timeline.segments.at(-1)?.openedAt ?? Date.now()
@@ -175,7 +175,7 @@ export class SessionArchive {
       const seed = nodes.length === 0 ? [] : [checkpointSeed(agent.session, nodes[0]!)]
       await this.runtime.sessions.flush(agent.session)
       const previousSessionId = String(agent.id)
-      const previousEventCount = agent.session.events.length
+      const previousEventCount = sessionEvents(agent.session).length
       const nextSessionId = options.sessionId ?? (`session-${randomUUID()}` as SessionId)
       const meta = continuationMeta(agent.session.header, previousSessionId as SessionId, seed.length)
       const agentOptions = { ...agent.options }
@@ -228,7 +228,8 @@ export class SessionArchive {
     const descriptor = timeline.segments[segment]!
     const requestedBefore = options.cursor?.beforeSeq ?? descriptor.eventCount
     const fromSeq = requestedBefore === undefined ? 0 : Math.max(0, requestedBefore - limit)
-    const loaded = await this.runtime.persistence.readFrom(
+    const loaded = await readSessionHistory(
+      this.runtime.persistence,
       descriptor.sessionId as SessionId,
       fromSeq,
       options.signal,
@@ -253,24 +254,24 @@ export class SessionArchive {
 
   private sessionBytes(session: Session): number {
     const measured = this.measuredSessions.get(session) ?? { count: 0, bytes: 0 }
-    for (let index = measured.count; index < session.events.length; index += 1) {
-      measured.bytes += Buffer.byteLength(JSON.stringify(session.events[index]), 'utf8')
+    for (let index = measured.count; index < sessionEvents(session).length; index += 1) {
+      measured.bytes += Buffer.byteLength(JSON.stringify(sessionEvents(session)[index]), 'utf8')
     }
-    measured.count = session.events.length
+    measured.count = sessionEvents(session).length
     this.measuredSessions.set(session, measured)
     return measured.bytes
   }
 }
 
 function checkpointSeed(session: Session, seq: number): SessionEvent {
-  const source = session.events[seq]
+  const source = sessionEvents(session)[seq]
   if (source?.type !== 'user/message') {
     throw new Error('rotation requires a user-message checkpoint after compaction')
   }
   const { seq: _seq, time: _time, sourceEventSeqs: _sources, surfaceOp: _surface, ...event } = source
   return {
     ...structuredClone(event),
-    seq: 0,
+    seq: 0 as SessionEvent['seq'],
     time: Date.now(),
     surfaceOp: 'append',
   }
@@ -284,7 +285,7 @@ function continuationMeta(
   return {
     ...(header.cwd === undefined ? {} : { cwd: header.cwd }),
     parentSession,
-    seedLength,
+    ...('isSeeded' in header ? { isSeeded: seedLength > 0 } : { seedLength }),
     ...(header.origin === undefined ? {} : { origin: header.origin }),
     ...(header.delegationDepth === undefined ? {} : { delegationDepth: header.delegationDepth }),
     ...(header.agentPreset === undefined ? {} : { agentPreset: header.agentPreset }),

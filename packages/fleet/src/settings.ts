@@ -1,9 +1,8 @@
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import z from '@deepseek-ai/schemastery'
 
 import { DEFAULT_ARCHIVE_POLICY, type ArchivePolicy } from './archive.js'
 
-export const FLEET_ARCHIVE_SETTINGS_NAMESPACE = settingsNamespace('dsh-patchouli-fleet')
+export const FLEET_ARCHIVE_SETTINGS_NAMESPACE = 'dsh-patchouli-fleet'
 
 export const ArchivePolicySchema = z.object({
   enabled: z.boolean().default(DEFAULT_ARCHIVE_POLICY.enabled),

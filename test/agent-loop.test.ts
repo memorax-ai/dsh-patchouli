@@ -963,7 +963,7 @@ test('aborts and drains an admitted turn update during consumer disposal', async
   assert.equal(calls.length, 1)
 })
 
-test('routes every enabled agent and tool data point through the memory service', async (t) => {
+for (const modernLifecycle of [false, true]) test('routes agent data through memory with ' + (modernLifecycle ? 'modern' : 'legacy') + ' lifecycle', async (t) => {
   const { ctx } = await mountConsumer(t, {
     retrieve: {
       sessionStart: true,
@@ -1030,7 +1030,8 @@ test('routes every enabled agent and tool data point through the memory service'
   const agent = fakeAgent('/workspace/hooks', session)
   const events = agentEvents(ctx, agent)
 
-  events.emit('agent/created', {})
+  events.emit('agent/created', modernLifecycle ? { source: 'resume' } : {})
+  // Also emit the old notification to ensure mixed hosts never inject twice.
   events.emit('agent/session-start', { source: 'resume' })
   await sessionStartSeen.promise
 

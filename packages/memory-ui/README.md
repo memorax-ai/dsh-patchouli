@@ -32,3 +32,7 @@ pnpm --dir packages/memory-ui pack
 ## License
 
 [MIT](LICENSE)
+
+## Compatibility validation (2026-09-19)
+
+The client no longer imports the removed DSH client runtime. It supplies localized labels required by current MarkdownText, ReadBlock and JsonTree primitives, and owns its plain-text renderer. The legacy 0.1.0-rc.6 build and 12 package tests pass; client type checks also pass against DSH 0.1.5-rc.2 and 0.1.6-alpha.2. These Windows checks do not replace browser interaction or macOS/Linux validation.

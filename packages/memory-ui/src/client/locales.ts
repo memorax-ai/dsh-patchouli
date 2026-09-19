@@ -3,6 +3,16 @@ import type { TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 export const NS = 'patchouli'
 
 export const zh = {
+  'render.copy': '复制',
+  'render.copied': '已复制',
+  'render.copyFailed': '复制失败',
+  'render.copyJson': '复制 JSON',
+  'render.copyPrettyJson': '复制格式化 JSON',
+  'render.copyPath': '复制路径',
+  'render.collapse': '收起',
+  'render.expand': '展开',
+  'render.footnotes': '脚注',
+  'render.lines': '行',
   'view.knowledge': '知识',
   'scope.aria': '知识范围',
   'scope.session': '当前会话',
@@ -118,6 +128,16 @@ export type PatchouliLocaleKey = keyof typeof zh
 export type PatchouliTranslate = TranslateNS<typeof NS>
 
 export const en: Record<PatchouliLocaleKey, string> = {
+  'render.copy': 'Copy',
+  'render.copied': 'Copied',
+  'render.copyFailed': 'Copy failed',
+  'render.copyJson': 'Copy JSON',
+  'render.copyPrettyJson': 'Copy formatted JSON',
+  'render.copyPath': 'Copy path',
+  'render.collapse': 'Collapse',
+  'render.expand': 'Expand',
+  'render.footnotes': 'Footnotes',
+  'render.lines': 'lines',
   'view.knowledge': 'Knowledge',
   'scope.aria': 'Knowledge scope',
   'scope.session': 'This session',

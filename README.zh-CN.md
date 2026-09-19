@@ -95,3 +95,7 @@ Patchouli 需要至少注册一个兼容的记忆或知识插件，才能实际�
 ## 这个插件的名字是什么意思？？？
 
 名称直接来自 [Patchouli Knowledge](https://en.touhouwiki.net/wiki/Patchouli_Knowledge)，同时致敬广为人知的 Minecraft 模组 [Patchouli](https://github.com/VazkiiMods/Patchouli)。
+
+## DSH compatibility (2026-09-19)
+
+Host、Agent Loop 和 Native Context 保留旧版兼容，并通过 DSH 0.1.5-rc.2 / 0.1.6-alpha.2 类型检查。历史读取适配只读持久化句柄并保证关闭；会话开始检索兼容两种生命周期，避免重复注入。可选 Fleet 归档适配器只在相应服务出现后启用。完整检查 174 项通过、1 项跳过；两版启用 Native Context 的隔离 Web 启动和 7 个 Harmony 补丁均通过。这不包含独立 Memory UI、真实浏览器操作或模型调用。

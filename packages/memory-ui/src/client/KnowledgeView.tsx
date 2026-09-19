@@ -56,6 +56,7 @@ import { useAnchoredPopover } from './useAnchoredPopover.js'
 type KnowledgeViewProps = ConvViewProps & PropsLocale<typeof NS>
   & PropsRenderSlots<'patchouli.document.renderer' | 'patchouli.agent.surface'>
   & {
+    sessionId: string
     documents: UiSurfaceConnection
     explorerPanes: ExplorerPaneRegistry<ExplorerPaneContext>
     documentActions: DocumentActionRegistry
