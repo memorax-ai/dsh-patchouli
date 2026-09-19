@@ -139,12 +139,13 @@ jobs:
   verify:
     name: Verify
     if: always()
-    needs: [node, rust_lint, rust_test, e2e]
+    needs: [node, upstream, rust_lint, rust_test, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Check verification jobs
         run: |
           test "${{ needs.node.result }}" = success
+          test "${{ needs.upstream.result }}" = success
           test "${{ needs.rust_lint.result }}" = success
           test "${{ needs.rust_test.result }}" = success
           test "${{ needs.e2e.result }}" = success
@@ -440,3 +441,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: gh release create "$GITHUB_REF_NAME" artifacts/**/* --generate-notes
+
+  upstream:
+    name: Current DSH types (${{ matrix.dsh }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dsh: [0.1.5-rc.2, 0.1.6-alpha.2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install isolated upstream and UI declarations
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/upstream"
+          echo '{"private":true}' > "$RUNNER_TEMP/upstream/package.json"
+          npm install --prefix "$RUNNER_TEMP/upstream" --ignore-scripts --no-audit --no-fund "@deepseek-ai/dsh@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-store@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-ui-conversation@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-ui-primitives@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-ui-slots@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-ui-chat@${{ matrix.dsh }}" "@deepseek-ai/dsh-client-ui-session@${{ matrix.dsh }}"
+      - name: Check Host packages and Memory UI against current APIs
+        shell: bash
+        run: node scripts/check-upstream-types.mjs "$RUNNER_TEMP/upstream"
