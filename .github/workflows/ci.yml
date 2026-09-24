@@ -204,7 +204,7 @@ jobs:
 
   publish-npm:
     name: Publish npm packages
-    needs: [package-plugin, release-daemon]
+    needs: package-plugin
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -424,7 +424,7 @@ jobs:
 
   release-daemon:
     name: Publish daemon release
-    needs: package-daemon
+    needs: [package-daemon, publish-npm]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
