@@ -20,6 +20,15 @@ import type {
   StandardRetrieveResult,
 } from './standard.js'
 
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'dsh-patchouli-native-context-service': {
+      kind: 'dsh-patchouli-native-context-service'
+      plugin: 'dsh-patchouli-native-context-service'
+    }
+  }
+}
+
 const plannerSystem = `You plan local context retrieval. Return only a JSON array of 1 to 4 concise search queries. Preserve important names, paths, errors, and identifiers. Do not explain the array.`
 
 const synthesisSystem = `Answer the user's question using only the supplied local evidence. Cite supporting evidence with square-bracket numbers such as [1]. Say when the evidence is insufficient. Do not invent files, events, commits, or conclusions.`
@@ -103,7 +112,7 @@ export class StandardLlmRunner implements
       system,
       signal,
       messages: [createUserMessage({
-        source: { kind: 'plugin', plugin: 'dsh-patchouli-native-context-service' },
+        source: { kind: 'dsh-patchouli-native-context-service', plugin: 'dsh-patchouli-native-context-service' },
         content: [{ type: 'text', text: prompt }],
       })],
     })) assembler.push(chunk)

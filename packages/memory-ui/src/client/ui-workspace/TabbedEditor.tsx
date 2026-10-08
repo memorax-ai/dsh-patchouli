@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef, type ReactNode } from 'react'
-import { IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseOutline16 } from '../icons.js'
 import type { DocumentRef } from '../ui-container/index.js'
 
 export type EditorTabDefinition = {

@@ -307,7 +307,7 @@ export async function runMultiSourceRecallDemo(options: DemoOptions): Promise<De
     )
     if (decision.kind !== 'enter') throw new Error('demo pre-step did not enter')
     const recallMessage = decision.messages.find(message => (
-      message.source.kind === 'plugin'
+      'plugin' in message.source
       && message.source.plugin === agentLoop.name
       && message.source.form === 'recall'
     ))

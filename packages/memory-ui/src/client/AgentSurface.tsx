@@ -1,4 +1,5 @@
-import { Button, IconSendOutline14, IconSparkle16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconSendOutline14, IconSparkle16 } from './icons.js'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import { NS } from './locales.js'
 

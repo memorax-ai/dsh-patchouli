@@ -99,6 +99,7 @@ function labels(t: PropsLocale<typeof NS>['t']) {
   return {
     markdown: { code: { copyLabel: copy, copiedLabel: copied }, footnotes: t('render.footnotes') },
     read: { copy, copied, collapse, collapseAria: collapse,
+      codeLabel: t('render.code'), wrapLabel: t('render.wrap'), unwrapLabel: t('render.unwrap'),
       expand: (hidden: number) => `${expand} (${hidden})`,
       expandAria: (hidden: number) => `${expand} (${hidden})`,
       window: (shown: number, total: number) => `${shown}/${total} ${t('render.lines')}` },

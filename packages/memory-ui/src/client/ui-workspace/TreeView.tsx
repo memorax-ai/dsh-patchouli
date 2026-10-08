@@ -7,10 +7,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
-import {
-  IconChevronDownOutline14,
-  IconChevronRightOutline14,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronDownOutline14, IconChevronRightOutline14 } from '../icons.js'
 
 type VisibleTreeItem<T> = {
   node: T

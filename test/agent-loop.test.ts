@@ -307,7 +307,7 @@ test('retrieves from a bounded pre-step observation and injects data without a p
   const recall = decision.messages[1]
   assert.ok(recall)
   assert.deepEqual(recall.source, {
-    kind: 'plugin',
+    kind: 'dsh-patchouli-agent-loop',
     plugin: 'dsh-patchouli-agent-loop',
     form: 'recall',
   })

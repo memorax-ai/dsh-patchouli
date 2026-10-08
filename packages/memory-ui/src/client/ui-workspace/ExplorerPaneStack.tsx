@@ -7,10 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import {
-  IconChevronDownOutline14,
-  IconChevronRightOutline14,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronDownOutline14, IconChevronRightOutline14 } from '../icons.js'
 import { ExplorerScrollPane } from './ExplorerScrollPane.js'
 import { Sash } from './Sash.js'
 

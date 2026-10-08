@@ -8,16 +8,8 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
-import {
-  Button,
-  IconArchiveOutline20,
-  IconCloseOutline16,
-  IconDataOutline16,
-  IconFolderOpenOutline16,
-  IconGlobeOutline14,
-  IconSettingsOutline14,
-  IconSparkle16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconArchiveOutline20, IconCloseOutline16, IconDataOutline16, IconFolderOpenOutline16, IconGlobeOutline14, IconSettingsOutline14, IconSparkle16 } from './icons.js'
 import type { ConvViewProps } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { PropsLocale, PropsRenderSlots, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
 import {

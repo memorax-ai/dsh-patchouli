@@ -1,4 +1,5 @@
-import { Button, IconWarningOutline16, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconWarningOutline16 } from './icons.js'
 import type { PatchouliTranslate } from './locales.js'
 
 export function EditModeSwitch({ enabled, confirmationOpen, onToggle, onCancel, onConfirm, t }: {

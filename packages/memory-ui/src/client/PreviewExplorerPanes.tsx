@@ -1,11 +1,4 @@
-import {
-  IconCodeOutline16,
-  IconDataOutline16,
-  IconFolderClose16,
-  IconFolderOpenOutline16,
-  IconLinkOutline16,
-  IconListPenOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCodeOutline16, IconDataOutline16, IconFolderClose16, IconFolderOpenOutline16, IconLinkOutline16, IconListPenOutline16 } from './icons.js'
 import type { DocumentRef } from './ui-container/index.js'
 import { ExplorerPaneRegistry, TreeView } from './ui-workspace/index.js'
 import type { PatchouliTranslate } from './locales.js'

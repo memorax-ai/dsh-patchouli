@@ -1,8 +1,5 @@
 import { useRef, useState, type FocusEvent } from 'react'
-import {
-  IconCloseOutline16,
-  IconSearchOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCloseOutline16, IconSearchOutline16 } from './icons.js'
 import type { PatchouliTranslate } from './locales.js'
 import { useAnchoredPopover } from './useAnchoredPopover.js'
 

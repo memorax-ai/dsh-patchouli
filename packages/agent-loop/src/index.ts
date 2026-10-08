@@ -21,6 +21,16 @@ import type {
 
 export const name = 'dsh-patchouli-agent-loop'
 
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'dsh-patchouli-agent-loop': {
+      kind: 'dsh-patchouli-agent-loop'
+      plugin: typeof name
+      form: 'recall'
+    }
+  }
+}
+
 export const inject = [
   'agents',
   'llm',
@@ -274,7 +284,7 @@ function aggregateForContext(
         results,
       }),
     }],
-    source: { kind: 'plugin', plugin: name, form: 'recall' },
+    source: { kind: name, plugin: name, form: 'recall' },
   })
 }
 
@@ -359,7 +369,7 @@ async function aggregateWithModel(
         results,
       }),
     }],
-    source: { kind: 'plugin', plugin: name, form: 'recall' },
+    source: { kind: name, plugin: name, form: 'recall' },
   })
   const assembler = new BlockAssembler()
   for await (const chunk of ctx.llm.stream({
@@ -391,7 +401,7 @@ async function aggregateWithModel(
         results: aggregated,
       }),
     }],
-    source: { kind: 'plugin', plugin: name, form: 'recall' },
+    source: { kind: name, plugin: name, form: 'recall' },
   })
 }
 
