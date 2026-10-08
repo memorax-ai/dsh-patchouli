@@ -11,7 +11,7 @@ for (const path of configs) {
   parsed.options.configFilePath = configPath
   const host = ts.createCompilerHost(parsed.options)
   host.resolveModuleNames = (names, containing) => names.map(name => {
-    const source = name.startsWith('@deepseek-ai/') ? join(upstream, 'probe.ts') : containing
+    const source = name.startsWith('@deepseek-ai/') ? join(upstream, 'node_modules/@deepseek-ai/dsh/probe.ts') : containing
     return ts.resolveModuleName(name, source, parsed.options, host).resolvedModule
   })
   const program = ts.createProgram(parsed.fileNames, parsed.options, host)
