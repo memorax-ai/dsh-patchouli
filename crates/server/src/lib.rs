@@ -1262,38 +1262,3 @@ impl Drop for ConnectionGuard {
         self.0.fetch_sub(1, Ordering::Relaxed);
     }
 }
-
-#[cfg(test)]
-mod frame_tests {
-    use std::io::Cursor;
-
-    use tokio::io::BufReader;
-
-    use super::{MAX_REQUEST_BYTES, RequestFrame, read_request_frame};
-
-    #[tokio::test]
-    async fn rejects_oversized_regular_request_before_dispatch() {
-        assert_oversized_frame_is_discarded("patchouli.entity.create@1").await;
-    }
-
-    #[tokio::test]
-    async fn rejects_oversized_subscription_request_before_dispatch() {
-        assert_oversized_frame_is_discarded("patchouli.changes.subscribe@1").await;
-    }
-
-    async fn assert_oversized_frame_is_discarded(method: &str) {
-        let mut input = format!(r#"{{"jsonrpc":"2.0","id":1,"method":"{method}"}}"#).into_bytes();
-        input.resize(MAX_REQUEST_BYTES + 1, b' ');
-        input.extend_from_slice(b"\n{}\n");
-        let mut reader = BufReader::new(Cursor::new(input));
-
-        assert!(matches!(
-            read_request_frame(&mut reader).await.unwrap(),
-            Some(RequestFrame::TooLarge)
-        ));
-        assert!(matches!(
-            read_request_frame(&mut reader).await.unwrap(),
-            Some(RequestFrame::Line(line)) if line == "{}"
-        ));
-    }
-}

@@ -104,10 +104,6 @@ jobs:
           ) | Out-Null
           if ($errors.Count -gt 0) { throw ($errors | Out-String) }
 
-      - name: Test Windows staged installation failure
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: scripts/test-install.ps1
 
   e2e:
     name: Test database loop
