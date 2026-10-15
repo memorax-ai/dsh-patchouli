@@ -2,6 +2,7 @@ import { Service, type Context } from '@deepseek-ai/cordis'
 import {
   defineDomain,
   domainTable,
+  type DomainTableSpec,
   type KvTable,
 } from '@deepseek-ai/dsh-storage-domain'
 import { z } from 'zod'
@@ -17,12 +18,17 @@ export interface MemoryCursorBinding {
 const cursorRecord = z.object({ cursor: z.string() })
 type CursorRecord = z.infer<typeof cursorRecord>
 
+// Table storage only calls parse(); Zod's internal types differ across DSH versions.
+const cursorTable = domainTable as (
+  schema: Pick<typeof cursorRecord, 'parse'>,
+) => DomainTableSpec<string, CursorRecord>
+
 /** Durable storage owned by the common memory consumer, independent of memory backends. */
 export const memoryCursorDomainSpec = defineDomain({
   name: 'patchouli_memory',
   version: 1,
   tables: {
-    cursors: domainTable<string, CursorRecord>(cursorRecord),
+    cursors: cursorTable(cursorRecord),
   },
 })
 
