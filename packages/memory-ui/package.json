@@ -1,6 +1,6 @@
 {
   "name": "dsh-patchouli-memory-ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Knowledge workspace UI for Patchouli and DeepSeek Harness",
   "type": "module",
   "main": "./lib/index.js",
@@ -62,10 +62,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-locale": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0",
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0",
-    "@deepseek-ai/dsh-client-ui-slots": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0",
+    "@deepseek-ai/dsh-client-locale": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0 || >=0.2.1-alpha.2 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0 || >=0.2.1-alpha.2 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0 || >=0.2.1-alpha.2 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.1.0-rc.6 <0.1.1-0 || >=0.1.1-0 <0.1.2-0 || >=0.1.5-0 <0.1.6-0 || >=0.1.6-0 <0.1.7-0 || >=0.2.0-rc.1 <0.2.1-0 || >=0.2.1-alpha.2 <0.3.0-0",
     "react": "^18.2.0"
   },
   "devDependencies": {
